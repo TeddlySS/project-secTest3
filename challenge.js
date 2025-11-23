@@ -2189,57 +2189,307 @@ window.confirmHint = function() {
 };
 
 // ============================================
-// 6. SIMULATION LOGIC (Client-side visuals only)
+// 8. SIMULATION LOGIC (COMPLETE ALL 24 CHALLENGES)
 // ============================================
 
-// SQL Simulation
-let sqlAttemptCount = 0;
+/* --- 1. WEB SECURITY --- */
+
+// SQL Injection
 window.attemptSQLLogin = function() {
-    sqlAttemptCount++;
     const user = document.getElementById('sqlUser').value;
-    const query = `SELECT * FROM users WHERE username='${user}'`;
-    const debug = document.getElementById('sqlDebug');
+    const pass = document.getElementById('sqlPass').value;
     const result = document.getElementById('sqlResult');
+    const debug = document.getElementById('sqlDebug');
     
-    debug.innerHTML = `<div style="margin-bottom:1rem;"><strong>Query:</strong><br><code>${query}</code></div>`;
+    // Logic: ต้องมี ' OR '1'='1 หรือการ comment #
+    const isBypass = (user.toLowerCase().includes("' or '1'='1") || user.includes("' || '1'='1")) && (user.includes('#') || user.includes('--'));
     
-    // Client-side visual check only (Real check happens in checkFlag)
-    if (user.toLowerCase().includes("' or '1'='1")) {
-        result.innerHTML = `✅ Login Successful! Flag: <code style="color:var(--success)">secXplore{sql_1nj3ct10n_byp4ss_adm1n}</code>`;
-        result.style.background = 'rgba(0,255,136,0.1)';
+    if (isBypass) {
+        result.className = 'result-panel success';
+        result.innerHTML = `✅ <strong>Login Successful!</strong><br>User: admin (ID: 1)<br>Flag: <code style="color:var(--success)">CTF{sql_1nj3ct10n_byp4ss}</code>`;
+        if(debug) debug.innerHTML = `Query: SELECT * FROM users WHERE user='${user}' AND pass='...'<br><span style="color:#0f0">Status: BYPASSED (Admin)</span>`;
     } else {
-        result.innerHTML = `❌ Login Failed`;
-        result.style.background = 'rgba(255,0,102,0.1)';
+        result.className = 'result-panel error';
+        result.innerHTML = `❌ <strong>Login Failed</strong>`;
+        if(debug) debug.innerHTML = `Query: SELECT * FROM users WHERE user='${user}'...<br><span style="color:red">Status: REJECTED</span>`;
     }
 };
 
-// CMD Simulation
+// Command Injection
 window.executeCMD = function() {
     const input = document.getElementById('cmdInput').value;
     const result = document.getElementById('cmdResult');
-    
-    if (input.includes(';')) {
-        if (input.includes('cat') && input.includes('flag')) {
-            result.innerHTML = `<pre style="color:var(--success)">PING 127.0.0.1...\n\nsecXplore{c0mm4nd_1nj3ct10n_pwn3d}</pre>`;
+    if (!input) return;
+
+    if (input.includes(';') || input.includes('&&') || input.includes('|')) {
+        if (input.includes('ls') || input.includes('dir')) {
+            result.innerHTML = `<pre>files:\nindex.php\nstyle.css\nflag.txt</pre>`;
+        } else if (input.includes('cat') && input.includes('flag')) {
+            result.innerHTML = `<pre style="color:var(--success)">CTF{c0mm4nd_1nj3ct10n_pwn3d}</pre>`;
         } else {
-            result.innerHTML = `<pre>PING 127.0.0.1...\n\nfiles:\nindex.php\nflag.txt</pre>`;
+            result.innerHTML = `<pre>Command executed. (Try listing files)</pre>`;
         }
     } else {
-        result.innerHTML = `<pre>PING ${input}...\n64 bytes from ${input}: icmp_seq=1 ttl=64 time=0.04ms</pre>`;
+        result.innerHTML = `<pre>PING ${input} (127.0.0.1): 56 data bytes\n64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.032 ms</pre>`;
     }
 };
 
-// XOR Simulation
-window.xorDecrypt = function() {
-    const keyHex = document.getElementById('xorKey').value;
-    // ... logic เดิม ...
-    document.getElementById('xorOutput').innerHTML = `Trying key 0x${keyHex}...`;
-};
-window.xorBruteForce = function() {
-    // ... logic เดิม ...
-    document.getElementById('xorOutput').innerHTML = `Brute forcing... Found readable text with Key 0x79`;
+// XSS Cookie Stealer
+window.submitXSS = function() {
+    const val = document.getElementById('xssInput').value;
+    const res = document.getElementById('xssResult');
+    const preview = document.getElementById('xssPreview');
+    
+    if (val.toLowerCase().includes('<script>')) {
+        res.innerHTML = '<span style="color:red">❌ Blocked by XSS Filter (<script> tag)</span>';
+        preview.innerHTML = '';
+    } else if ((val.includes('<img') || val.includes('<svg') || val.includes('<body')) && 
+               (val.includes('onerror') || val.includes('onload')) && 
+               val.includes('document.cookie')) {
+        res.innerHTML = '<span style="color:var(--success)">✅ Admin Cookie Stolen: admin_sess=CTF{xss_c00k13_st34l3r}</span>';
+        preview.innerHTML = val; 
+    } else {
+        res.innerHTML = 'Comment Posted (No exploit detected).';
+        preview.innerText = val;
+    }
 };
 
+// JWT Token
+window.verifyJWT = function() {
+    const token = document.getElementById('jwtInput').value;
+    const res = document.getElementById('jwtResult');
+    // Logic ง่ายๆ เช็ค keyword
+    if (token.includes('HS256') && token.includes('admin')) {
+        res.innerHTML = '<span style="color:var(--success)">✅ Access Granted! Flag: CTF{jwt_alg0r1thm_c0nfus10n}</span>';
+    } else {
+        res.innerHTML = '<span style="color:red">❌ Invalid Signature or Role is not admin</span>';
+    }
+};
+window.decodeJWT = () => document.getElementById('toolOutput').innerText = 'Header: {"alg":"RS256"}\nPayload: {"user":"user", "role":"user"}';
+window.showPublicKey = () => document.getElementById('toolOutput').innerText = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAA...\n(Hint: Use this as HMAC secret for HS256)';
+window.createHS256 = () => document.getElementById('jwtInput').value = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoidXNlciIsInJvbGUiOiJhZG1pbiJ9.signature_modified';
+
+
+/* --- 2. CRYPTOGRAPHY --- */
+
+// Multi-Layer
+window.decodeROT13 = () => {
+    let text = document.getElementById('cipherInput').value || "FrpKcyber";
+    let res = text.replace(/[a-zA-Z]/g,c=>String.fromCharCode((c<="Z"?90:122)>=(c=c.charCodeAt(0)+13)?c:c-26));
+    document.getElementById('cipherOutput').innerText = "ROT13 Result: " + res;
+};
+window.decodeCaesar = () => document.getElementById('cipherOutput').innerText += "\nCaesar(-3): CTF{mult1_l4y3r_c1ph3r}";
+window.decodeAll = () => document.getElementById('cipherOutput').innerText = "Auto Decoded: CTF{mult1_l4y3r_c1ph3r}";
+
+// XOR
+window.xorDecrypt = () => {
+    const k = document.getElementById('xorKey').value;
+    // เช็ค key 79 (ฐาน 16) หรือ 121 (ฐาน 10)
+    if(k === '79' || k.toLowerCase() === 'x79') {
+        document.getElementById('xorOutput').innerText = "Decrypted: CTF{x0r_s1ngl3_byt3}";
+    } else {
+        document.getElementById('xorOutput').innerText = "Garbage data... (Try checking hints)";
+    }
+};
+window.xorBruteForce = () => document.getElementById('xorOutput').innerText = "Scanning 00-FF...\n... Found candidate at 0x79: CTF{x0r_s1ngl3_byt3}";
+
+// RSA
+window.calculateCRT = () => document.getElementById('rsaOutput').innerText = "Using CRT on c1, c2, c3...\nm^3 = 123456789...";
+window.calculateCubeRoot = () => document.getElementById('rsaOutput').innerText += "\nCalculating Cube Root...\nm = 4354467...";
+window.convertToText = () => document.getElementById('rsaOutput').innerText += "\n\n🎉 Flag Found: CTF{rs4_sm4ll_3xp0n3nt}";
+
+// Custom Cipher
+window.decryptCustom = () => {
+    const key = document.getElementById('customKey').value;
+    if(key === 'CTF') document.getElementById('customOutput').innerText = "CTF{cust0m_c1ph3r_br0k3n}";
+    else document.getElementById('customOutput').innerText = "Wrong Key or Algorithm";
+};
+window.analyzeCustom = () => document.getElementById('customOutput').innerText = "Analysis: It's a Vigenere cipher but shifts depend on position index.";
+
+
+/* --- 3. DIGITAL FORENSICS --- */
+
+// Birthday EXIF
+window.executeEXIFCommand = function() {
+    const cmd = document.getElementById('exifCommand').value.toLowerCase();
+    const term = document.getElementById('exifTerminal');
+    term.innerHTML += `\n$ ${cmd}`;
+    
+    if (cmd.includes('exiftool') && (cmd.includes('-copyright') || cmd.includes('-a') || cmd.includes('birthday'))) {
+        term.innerHTML += `\n[Metadata Found]\nCamera Model: Canon EOS\nCopyright: CTF{ex1f_h1dd3n_m3ss4g3}\nUser Comment: Happy Birthday!`;
+    } else if (cmd.includes('strings')) {
+        term.innerHTML += `\n...JFIF...\nCTF{ex1f_h1dd3n_m3ss4g3}\n...`;
+    } else {
+        term.innerHTML += `\nFile: birthday.jpg (JPEG Image)`;
+    }
+};
+
+// Geolocation
+window.executeGeoCommand = function() {
+    const cmd = document.getElementById('geoCommand').value.toLowerCase();
+    const term = document.getElementById('geoTerminal');
+    term.innerHTML += `\n$ ${cmd}`;
+    
+    if (cmd.includes('exiftool')) {
+        term.innerHTML += `\nGPS Latitude: 13.8115 N\nGPS Longitude: 100.5629 E\n(Hint: Location is a University)`;
+    } else if (cmd.includes('md5')) {
+        term.innerHTML += `\nMD5 Hash: CTF{g30l0c4t10n_md5}`;
+    }
+};
+
+// Steganography
+window.executeStegoCommand = function() {
+    const cmd = document.getElementById('stegoCommand').value.toLowerCase();
+    const term = document.getElementById('stegoTerminal');
+    term.innerHTML += `\n$ ${cmd}`;
+    
+    if (cmd.includes('binwalk')) {
+        if(cmd.includes('-e')) term.innerHTML += `\nExtracted: hidden.zip (at offset 0x1234)`;
+        else term.innerHTML += `\nDECIMAL   DESCRIPTION\n-----------------------\n0         JPEG image\n8187      Zip archive data, encrypted`;
+    } else if (cmd.includes('unzip')) {
+        term.innerHTML += `\nArchive: hidden.zip\nInflating: secret.txt\n(Password verified)`;
+    } else if (cmd.includes('cat') || cmd.includes('base64')) {
+        term.innerHTML += `\nContent: CTF{st3g4n0gr4phy_m4st3r}`;
+    }
+};
+
+// Disk Analysis
+window.executeDiskCommand = function() {
+    const cmd = document.getElementById('diskCommand').value.toLowerCase();
+    const term = document.getElementById('diskTerminal');
+    term.innerHTML += `\n$ ${cmd}`;
+    
+    if (cmd.includes('fls')) {
+        term.innerHTML += `\nr/r 12847: secret_data.txt (deleted)\nr/r 12848: note.txt`;
+    } else if (cmd.includes('icat') || cmd.includes('foremost')) {
+        term.innerHTML += `\nRecovering inode 12847...\nContent: CTF{d1sk_4n4lys1s_pr0}`;
+    } else if (cmd.includes('strings') && cmd.includes('grep')) {
+        term.innerHTML += `\nOffset 0x1F4B2C: CTF{d1sk_4n4lys1s_pr0}`;
+    }
+};
+
+
+/* --- 4. NETWORK SECURITY --- */
+
+// Packet Sniffer
+window.executePacketCommand = function() {
+    const cmd = document.getElementById('packetCommand').value.toLowerCase();
+    const term = document.getElementById('packetTerminal');
+    term.innerHTML += `\n$ ${cmd}`;
+    
+    if ((cmd.includes('tshark') || cmd.includes('tcpdump')) && cmd.includes('post')) {
+        term.innerHTML += `\nPOST /api/login HTTP/1.1\nHost: bank.com\n\nuser=admin&pass=CTF{p4ck3t_sn1ff3r_b4s1c}`;
+    } else {
+        term.innerHTML += `\nCapturing... (Too much traffic. Try filtering for POST)`;
+    }
+};
+
+// DNS Tunneling
+window.executeDNSCommand = function() {
+    const cmd = document.getElementById('dnsCommand').value.toLowerCase();
+    const term = document.getElementById('dnsTerminal');
+    term.innerHTML += `\n$ ${cmd}`;
+    
+    if (cmd.includes('tshark') || cmd.includes('grep')) {
+        term.innerHTML += `\nQuery: Q1RGe2Ruc190dW5u.exfil.com\nQuery: MzFfM3h0cjRjdH0=.exfil.com\n(Hint: Combine subdomains and Base64 Decode)`;
+    } else if (cmd.includes('base64')) {
+        term.innerHTML += `\nDecoded: CTF{dns_tunn31_3xtr4ct}`;
+    }
+};
+
+// ARP Spoofing
+window.executeARPCommand = function() {
+    const cmd = document.getElementById('arpCommand').value.toLowerCase();
+    const term = document.getElementById('arpTerminal');
+    term.innerHTML += `\n$ ${cmd}`;
+    
+    if (cmd.includes('arpspoof')) {
+        term.innerHTML += `\n[+] Spoofing 192.168.1.100... Target poisoned.\n[+] Traffic Intercepted.\nFound POST data: pass=CTF{4rp_sp00f1ng_4tt4ck}`;
+    }
+};
+
+// SSL Strip
+window.executeSSLCommand = function() {
+    const cmd = document.getElementById('sslCommand').value.toLowerCase();
+    const term = document.getElementById('sslTerminal');
+    term.innerHTML += `\n$ ${cmd}`;
+    
+    if (cmd.includes('grep') || (cmd.includes('tshark') && cmd.includes('http'))) {
+        term.innerHTML += `\nHTTP POST /login (Downgraded from HTTPS)\npassword=CTF{ssl_str1p_4n4lys1s}`;
+    }
+};
+
+
+/* --- 5. REVERSE ENGINEERING --- */
+
+// ASM Password
+window.testPassword = () => {
+    const v = document.getElementById('asmInput').value;
+    if(v.startsWith('CTF')) document.getElementById('asmOutput').innerText = "✅ Correct! Password: CTF{4sm_p4ssw0rd_ch3ck}";
+    else document.getElementById('asmOutput').innerText = "❌ Incorrect Password";
+};
+window.analyzeASM = () => document.getElementById('asmOutput').innerText = "Analysis:\ncmp al, 115 -> 's'\ncmp al, 101 -> 'e'\nIt compares input string character by character.";
+
+// Crackme
+window.validateSerial = () => document.getElementById('crackmeOutput').innerText = "Checking... Invalid Serial.";
+window.generateSerial = () => document.getElementById('crackmeOutput').innerText = "Algorithm Reversed!\nValid Serial Generated: CTF{cr4ckm3_s3r14l_k3y}";
+
+// Obfuscated
+window.decodeHexStrings = () => document.getElementById('obfuscatedOutput').innerText = "Decoded Strings:\n'sec', 'Xplore', 'flag', 'CTF{obfusc4t3d_c0d3}'";
+window.reconstructFlag = () => document.getElementById('obfuscatedOutput').innerText = "Flag Reconstructed: CTF{obfusc4t3d_c0d3}";
+
+// Malware
+window.decodeC2 = () => document.getElementById('malwareOutput').innerText = "Decoded C2 IP: 192.168.1.50:4444";
+window.extractFlag = () => document.getElementById('malwareOutput').innerText = "Memory Strings Found:\nCTF{m4lw4r3_4n4lys1s_c2}";
+
+
+/* --- 6. MOBILE SECURITY --- */
+
+// APK Strings
+window.executeAPKCommand = function() {
+    const cmd = document.getElementById('apkCommand').value.toLowerCase();
+    const term = document.getElementById('apkTerminal');
+    term.innerHTML += `\n$ ${cmd}`;
+    
+    if (cmd.includes('grep') || cmd.includes('strings')) {
+        term.innerHTML += `\nFound string in Constants.java:\nAPI_KEY = "Q1RGezRwa19zdHIxbmdfNG40bHlzMXN9" (Base64)`;
+    } else if (cmd.includes('base64')) {
+        term.innerHTML += `\nDecoded: CTF{4pk_str1ng_4n4lys1s}`;
+    }
+};
+
+// Root Detection
+window.executeRootCommand = function() {
+    const cmd = document.getElementById('rootCommand').value.toLowerCase();
+    const term = document.getElementById('rootTerminal');
+    term.innerHTML += `\n$ ${cmd}`;
+    
+    if (cmd.includes('frida') || cmd.includes('objection')) {
+        term.innerHTML += `\n[+] Hooking System.exit()...\n[+] Hooking isRooted()...\n[+] Root Check Bypassed!\n[+] Admin Panel Flag: CTF{r00t_d3t3ct10n_byp4ss}`;
+    }
+};
+
+// SSL Pinning
+window.executeSSLPinCommand = function() {
+    const cmd = document.getElementById('sslPinCommand').value.toLowerCase();
+    const term = document.getElementById('sslPinTerminal');
+    term.innerHTML += `\n$ ${cmd}`;
+    
+    if (cmd.includes('objection') || cmd.includes('frida')) {
+        term.innerHTML += `\n[+] android sslpinning disable\n[+] SSL Pinning Disabled.\n[+] Burp Suite Intercepted:\n    Authorization: Bearer CTF{ssl_p1nn1ng_byp4ss}`;
+    }
+};
+
+// Native Library
+window.executeNativeCommand = function() {
+    const cmd = document.getElementById('nativeCommand').value.toLowerCase();
+    const term = document.getElementById('nativeTerminal');
+    term.innerHTML += `\n$ ${cmd}`;
+    
+    if (cmd.includes('strings') || cmd.includes('objdump')) {
+        term.innerHTML += `\n.rodata section:\nSecret Key found\nXOR function at 0x1234\nFlag String: CTF{n4t1v3_l1br4ry_r3v}`;
+    }
+};
 // ============================================
 // 7. NAVIGATION & MODAL EXPORTS
 // ============================================
@@ -2329,4 +2579,5 @@ window.closeModal = function() {
 
 window.confirmBackToCategory = function() {
     document.getElementById('interactiveModal').classList.remove('active');
+
 };

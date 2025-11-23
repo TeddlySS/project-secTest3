@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Admin Panel - secXplore</title>
+ <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+ <!-- Cyber Grid Background -->
+ <div class="cyber-grid"></div>
+ 
+ <!-- Navigation -->
+ <nav class="admin-nav">
+ <div class="nav-container">
+ <div class="logo">
+ 
+ <span class="logo-text">secXplore <span class="admin-badge">ADMIN</span></span>
+ </div>
+ <div class="nav-actions">
+ <span class="user-info">
+ 
+ <span id="adminUsername">Admin</span>
+ </span>
+ <button class="btn-secondary" onclick="switchToUserView()">
+ User View
+ </button>
+ </div>
+ </div>
+ </nav>
+
+ <!-- Sidebar -->
+ <aside class="sidebar" id="sidebar">
+ <div class="sidebar-menu">
+ <a href="#dashboard" class="menu-item active" onclick="showSection('dashboard')">
+ 
+ <span class="menu-text">Dashboard</span>
+ </a>
+ <a href="#challenges" class="menu-item" onclick="showSection('challenges')">
+ 
+ <span class="menu-text">Challenges</span>
+ </a>
+ <a href="#hints" class="menu-item" onclick="showSection('hints')">
+ 
+ <span class="menu-text">Hints Manager</span>
+ </a>
+ <a href="#users" class="menu-item" onclick="showSection('users')">
+ 
+ <span class="menu-text">Users</span>
+ </a>
+ <a href="#submissions" class="menu-item" onclick="showSection('submissions')">
+ 
+ <span class="menu-text">Submissions</span>
+ </a>
+ <a href="#statistics" class="menu-item" onclick="showSection('statistics')">
+ 
+ <span class="menu-text">Statistics</span>
+ </a>
+ <a href="#files" class="menu-item" onclick="showSection('files')">
+ 
+ <span class="menu-text">Admin Log</span>
+ </a>
+ <a href="#settings" class="menu-item" onclick="showSection('settings')">
+ 
+ <span class="menu-text">Settings</span>
+ </a>
+ </div>
+ </aside>
+
+ <!-- Main Content -->
+ <main class="admin-main">
+ 
+ <!-- Dashboard Section -->
+ <section id="section-dashboard" class="admin-section active">
+ <div class="section-header">
+ <h1>Dashboard Overview</h1>
+ <p class="section-subtitle">Real-time platform statistics and insights</p>
+ </div>
+
+ <!-- Stats Cards -->
+ <div class="stats-grid">
+ <div class="stat-card">
+ <div class="stat-icon blue"></div>
+ <div class="stat-info">
+ <h3 id="totalChallenges">0</h3>
+ <p>Total Challenges</p>
+ </div>
+ <div class="stat-trend positive">+5 this week</div>
+ </div>
+
+ <div class="stat-card">
+ <div class="stat-icon green"></div>
+ <div class="stat-info">
+ <h3 id="totalUsers">0</h3>
+ <p>Registered Users</p>
+ </div>
+ <div class="stat-trend positive">+12 this week</div>
+ </div>
+
+ <div class="stat-card">
+ <div class="stat-icon purple"></div>
+ <div class="stat-info">
+ <h3 id="totalSubmissions">0</h3>
+ <p>Total Submissions</p>
+ </div>
+ <div class="stat-trend positive">+89 today</div>
+ </div>
+
+ <div class="stat-card">
+ <div class="stat-icon orange"></div>
+ <div class="stat-info">
+ <h3 id="solveRate">0%</h3>
+ <p>Average Solve Rate</p>
+ </div>
+ <div class="stat-trend positive">+3.2%</div>
+ </div>
+ </div>
+
+ <!-- Charts Row -->
+ <div class="dashboard-row">
+ <div class="dashboard-card">
+ <h3>Submissions This Week</h3>
+ <canvas id="submissionsChart"></canvas>
+ </div>
+ <div class="dashboard-card">
+ <h3>Category Distribution</h3>
+ <canvas id="categoryChart"></canvas>
+ </div>
+ </div>
+
+ <!-- User Activity Statistics Table -->
+ <div class="dashboard-card">
+ <h3> Platform Activity Statistics (Last 7 Days)</h3>
+ <div class="stats-table-container">
+ <table class="stats-table">
+ <thead>
+ <tr>
+ <th>Metric</th>
+ <th>Today</th>
+ <th>Yesterday</th>
+ <th>This Week</th>
+ <th>Trend</th>
+ </tr>
+ </thead>
+ <tbody id="activityStatsBody">
+ <tr>
+ <td><strong> New Registrations</strong></td>
+ <td class="stat-number">9</td>
+ <td class="stat-number">10</td>
+ <td class="stat-number">65</td>
+ <td><span class="trend-badge positive">+12%</span></td>
+ </tr>
+ <tr>
+ <td><strong> Challenge Solves</strong></td>
+ <td class="stat-number">89</td>
+ <td class="stat-number">76</td>
+ <td class="stat-number">542</td>
+ <td><span class="trend-badge positive">+17%</span></td>
+ </tr>
+ <tr>
+ <td><strong> Total Submissions</strong></td>
+ <td class="stat-number">147</td>
+ <td class="stat-number">132</td>
+ <td class="stat-number">1,247</td>
+ <td><span class="trend-badge positive">+11%</span></td>
+ </tr>
+ <tr>
+ <td><strong> Active Users</strong></td>
+ <td class="stat-number">62</td>
+ <td class="stat-number">58</td>
+ <td class="stat-number">156</td>
+ <td><span class="trend-badge positive">+7%</span></td>
+ </tr>
+ <tr>
+ <td><strong> Hints Purchased</strong></td>
+ <td class="stat-number">23</td>
+ <td class="stat-number">19</td>
+ <td class="stat-number">167</td>
+ <td><span class="trend-badge positive">+21%</span></td>
+ </tr>
+ <tr>
+ <td><strong> Avg Response Time</strong></td>
+ <td class="stat-number">1.2s</td>
+ <td class="stat-number">1.4s</td>
+ <td class="stat-number">1.3s</td>
+ <td><span class="trend-badge positive">-14%</span></td>
+ </tr>
+ </tbody>
+ </table>
+ </div>
+ </div>
+ </section>
+
+ <!-- Challenges Section -->
+ <section id="section-challenges" class="admin-section">
+ <div class="section-header">
+ <div>
+ <h1>Challenge Management</h1>
+ <p class="section-subtitle">Create, edit, and manage CTF challenges</p>
+ </div>
+ <button class="btn-primary" onclick="openChallengeModal()">
+ Add New Challenge
+ </button>
+ </div>
+
+ <!-- Filters -->
+ <div class="filters-bar">
+ <input type="text" class="search-input" placeholder=" Search challenges..." 
+ id="challengeSearch" onkeyup="filterChallenges()">
+ <select class="filter-select" id="categoryFilter" onchange="filterChallenges()">
+ <option value="">All Categories</option>
+ <option value="web">Web Security</option>
+ <option value="crypto">Cryptography</option>
+ <option value="forensics">Digital Forensics</option>
+ <option value="network">Network Security</option>
+ <option value="reverse">Reverse Engineering</option>
+ <option value="mobile">Mobile Security</option>
+ </select>
+ <select class="filter-select" id="difficultyFilter" onchange="filterChallenges()">
+ <option value="">All Difficulties</option>
+ <option value="easy">Easy</option>
+ <option value="medium">Medium</option>
+ <option value="hard">Hard</option>
+ <option value="expert">Expert</option>
+ </select>
+ <select class="filter-select" id="statusFilter" onchange="filterChallenges()">
+ <option value="">All Status</option>
+ <option value="active">Active</option>
+ <option value="inactive">Inactive</option>
+ </select>
+ </div>
+
+ <!-- Challenges Table -->
+ <div class="table-container">
+ <table class="admin-table">
+ <thead>
+ <tr>
+ <th>Code</th>
+ <th>Title</th>
+ <th>Category</th>
+ <th>Difficulty</th>
+ <th>Points</th>
+ <th>Solves</th>
+ <th>Status</th>
+ <th>Actions</th>
+ </tr>
+ </thead>
+ <tbody id="challengesTableBody">
+ <!-- Populated by JS -->
+ </tbody>
+ </table>
+ </div>
+ </section>
+
+ <!-- Hints Section -->
+ <section id="section-hints" class="admin-section">
+ <div class="section-header">
+ <h1>Hints Manager</h1>
+ <p class="section-subtitle">Manage hints for all challenges</p>
+ </div>
+
+ <div class="hints-container">
+ <div class="hints-sidebar">
+ <h3>Select Challenge</h3>
+ <input type="text" class="search-input" placeholder=" Search..." 
+ id="hintChallengeSearch" onkeyup="filterHintChallenges()">
+ <div class="hints-challenge-list" id="hintsChallengeList">
+ <!-- Populated by JS -->
+ </div>
+ </div>
+
+ <div class="hints-main">
+ <div id="noHintSelected" class="empty-state">
+ <div class="empty-icon"></div>
+ <h3>No Challenge Selected</h3>
+ <p>Select a challenge from the left to manage its hints</p>
+ </div>
+
+ <div id="hintEditor" class="hint-editor" style="display: none;">
+ <div class="hint-editor-header">
+ <h3 id="selectedChallengeName"></h3>
+ <button class="btn-primary" onclick="addNewHint()">
+ Add Hint
+ </button>
+ </div>
+
+ <div class="hints-list" id="hintsList">
+ <!-- Populated by JS -->
+ </div>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <!-- Users Section -->
+ <section id="section-users" class="admin-section">
+ <div class="section-header">
+ <h1>User Management</h1>
+ <p class="section-subtitle">Manage platform users and permissions</p>
+ </div>
+
+ <div class="filters-bar">
+ <input type="text" class="search-input" placeholder=" Search users..." 
+ id="userSearch" onkeyup="filterUsers()">
+ <select class="filter-select" id="roleFilter" onchange="filterUsers()">
+ <option value="">All Roles</option>
+ <option value="user">User</option>
+ <option value="admin">Admin</option>
+ </select>
+ <select class="filter-select" id="userStatusFilter" onchange="filterUsers()">
+ <option value="">All Status</option>
+ <option value="active">Active</option>
+ <option value="inactive">Inactive</option>
+ </select>
+ </div>
+
+ <div class="table-container">
+ <table class="admin-table">
+ <thead>
+ <tr>
+ <th>Username</th>
+ <th>Email</th>
+ <th>Display Name</th>
+ <th>Role</th>
+ <th>Score</th>
+ <th>Rank</th>
+ <th>Created Date</th>
+ <th>Status</th>
+ <th>Actions</th>
+ </tr>
+ </thead>
+ <tbody id="usersTableBody">
+ <!-- Populated by JS -->
+ </tbody>
+ </table>
+ </div>
+ </section>
+
+ <!-- Submissions Section -->
+ <section id="section-submissions" class="admin-section">
+ <div class="section-header">
+ <h1>Submission History</h1>
+ <p class="section-subtitle">Monitor all challenge submissions</p>
+ </div>
+
+ <div class="filters-bar">
+ <input type="text" class="search-input" placeholder=" Search submissions..." 
+ id="submissionSearch" onkeyup="filterSubmissions()">
+ <select class="filter-select" id="submissionResultFilter" onchange="filterSubmissions()">
+ <option value="">All Results</option>
+ <option value="correct">Correct</option>
+ <option value="incorrect">Incorrect</option>
+ </select>
+ <input type="date" class="filter-select" id="submissionDateFilter" onchange="filterSubmissions()">
+ </div>
+
+ <div class="table-container">
+ <table class="admin-table">
+ <thead>
+ <tr>
+ <th>User</th>
+ <th>Challenge</th>
+ <th>Flag Submitted</th>
+ <th>Result</th>
+ <th>Points</th>
+ <th>Time Taken</th>
+ <th>Hints Used</th>
+ <th>Submitted At</th>
+ </tr>
+ </thead>
+ <tbody id="submissionsTableBody">
+ <!-- Populated by JS -->
+ </tbody>
+ </table>
+ </div>
+ </section>
+
+ <!-- Statistics Section -->
+ <section id="section-statistics" class="admin-section">
+ <div class="section-header">
+ <h1>Advanced Statistics</h1>
+ <p class="section-subtitle">Detailed analytics and insights</p>
+ </div>
+
+ <div class="stats-tabs">
+ <button class="tab-btn active" onclick="showStatsTab('overview')">Overview</button>
+ <button class="tab-btn" onclick="showStatsTab('challenges')">Challenges</button>
+ <button class="tab-btn" onclick="showStatsTab('users')">Users</button>
+ <button class="tab-btn" onclick="showStatsTab('performance')">Performance</button>
+ </div>
+
+ <div id="stats-overview" class="stats-tab-content active">
+ <div class="dashboard-row">
+ <div class="dashboard-card">
+ <h3>User Activity Timeline</h3>
+ <canvas id="userActivityChart"></canvas>
+ </div>
+ <div class="dashboard-card">
+ <h3>Top Performers</h3>
+ <div id="topPerformersList"></div>
+ </div>
+ </div>
+
+ <div class="dashboard-row">
+ <div class="dashboard-card">
+ <h3>Challenge Difficulty Distribution</h3>
+ <canvas id="difficultyChart"></canvas>
+ </div>
+ <div class="dashboard-card">
+ <h3>Solve Rate by Category</h3>
+ <canvas id="solveRateChart"></canvas>
+ </div>
+ </div>
+ </div>
+
+ <div id="stats-challenges" class="stats-tab-content">
+ <h3>Challenge Performance Metrics</h3>
+ <!-- Add challenge-specific stats -->
+ </div>
+
+ <div id="stats-users" class="stats-tab-content">
+ <h3>User Engagement Metrics</h3>
+ <!-- Add user-specific stats -->
+ </div>
+
+ <div id="stats-performance" class="stats-tab-content">
+ <h3>System Performance</h3>
+ <!-- Add performance metrics -->
+ </div>
+ </section>
+
+ <!-- Files Section -->
+ <section id="section-files" class="admin-section">
+ <div class="section-header">
+ <h1>Admin Activity Log</h1>
+ <p class="section-subtitle">Track all admin actions and changes</p>
+ </div>
+
+ <div class="filters-bar">
+ <input type="text" class="search-input" placeholder=" Search logs..." 
+ id="logSearch" onkeyup="filterLogs()">
+ <select class="filter-select" id="logActionFilter" onchange="filterLogs()">
+ <option value="">All Actions</option>
+ <option value="create">Create</option>
+ <option value="update">Update</option>
+ <option value="delete">Delete</option>
+ </select>
+ <input type="date" class="filter-select" id="logDateFilter" onchange="filterLogs()">
+ </div>
+
+ <div class="table-container">
+ <table class="admin-table">
+ <thead>
+ <tr>
+ <th>Timestamp</th>
+ <th>Admin</th>
+ <th>Action</th>
+ <th>Target</th>
+ <th>Details</th>
+ <th>IP Address</th>
+ </tr>
+ </thead>
+ <tbody id="adminLogsTableBody">
+ <!-- Populated by JS -->
+ </tbody>
+ </table>
+ </div>
+ </section>
+
+ <!-- Settings Section -->
+ <section id="section-settings" class="admin-section">
+ <div class="section-header">
+ <h1>Platform Settings</h1>
+ <p class="section-subtitle">Configure platform options</p>
+ </div>
+
+ <div class="settings-container">
+ <div class="settings-card">
+ <h3>General Settings</h3>
+ <div class="setting-item">
+ <label>Platform Name</label>
+ <div class="setting-value">secXplore CTF</div>
+ </div>
+ <div class="setting-item">
+ <label>Allow Registration</label>
+ <label class="switch">
+ <input type="checkbox" checked>
+ <span class="slider"></span>
+ </label>
+ </div>
+ <div class="setting-item">
+ <label>Maintenance Mode</label>
+ <label class="switch">
+ <input type="checkbox">
+ <span class="slider"></span>
+ </label>
+ </div>
+ </div>
+
+ <div class="settings-card">
+ <h3>Challenge Settings</h3>
+ <div class="setting-item">
+ <label>Max Attempts Per Challenge</label>
+ <input type="number" class="form-input" value="0" placeholder="0 = unlimited">
+ </div>
+ <div class="setting-item">
+ <label>Enable Hints</label>
+ <label class="switch">
+ <input type="checkbox" checked>
+ <span class="slider"></span>
+ </label>
+ </div>
+ <div class="setting-item">
+ <label>Dynamic Scoring</label>
+ <label class="switch">
+ <input type="checkbox">
+ <span class="slider"></span>
+ </label>
+ </div>
+ </div>
+
+ <div class="settings-card">
+ <h3>Security Settings</h3>
+ <div class="setting-item">
+ <label>Rate Limiting (requests/min)</label>
+ <input type="number" class="form-input" value="60">
+ </div>
+ <div class="setting-item">
+ <label>Require Email Verification</label>
+ <label class="switch">
+ <input type="checkbox" checked>
+ <span class="slider"></span>
+ </label>
+ </div>
+ </div>
+ </div>
+
+ <button class="btn-primary" style="margin-top: 2rem;" onclick="saveSettings()">
+ Save Settings
+ </button>
+ </section>
+
+ </main>
+
+ <!-- Challenge Modal -->
+ <div class="modal" id="challengeModal">
+ <div class="modal-backdrop" onclick="closeChallengeModal()"></div>
+ <div class="modal-content large">
+ <div class="modal-header">
+ <h2 id="challengeModalTitle">Add New Challenge</h2>
+ <button class="close-btn" onclick="closeChallengeModal()">&times;</button>
+ </div>
+
+ <form id="challengeForm" class="challenge-form">
+ <input type="hidden" id="challengeId">
+ 
+ <div class="form-row">
+ <div class="form-group">
+ <label>Challenge Code *</label>
+ <input type="text" id="challengeCode" required 
+ placeholder="e.g., WEB001" class="form-input">
+ <small>Unique identifier for the challenge</small>
+ </div>
+
+ <div class="form-group">
+ <label>Title *</label>
+ <input type="text" id="challengeTitle" required 
+ placeholder="e.g., SQL Injection Basics" class="form-input">
+ </div>
+ </div>
+
+ <div class="form-row">
+ <div class="form-group">
+ <label>Category *</label>
+ <select id="challengeCategory" required class="form-select">
+ <option value="">Select Category</option>
+ <option value="web"> Web Security</option>
+ <option value="crypto"> Cryptography</option>
+ <option value="forensics"> Digital Forensics</option>
+ <option value="network"> Network Security</option>
+ <option value="reverse"> Reverse Engineering</option>
+ <option value="mobile"> Mobile Security</option>
+ </select>
+ </div>
+
+ <div class="form-group">
+ <label>Topic</label>
+ <input type="text" id="challengeTopic" 
+ placeholder="e.g., SQL Injection" class="form-input">
+ </div>
+ </div>
+
+ <div class="form-row">
+ <div class="form-group">
+ <label>Difficulty *</label>
+ <select id="challengeDifficulty" required class="form-select">
+ <option value="">Select Difficulty</option>
+ <option value="easy"> Easy</option>
+ <option value="medium"> Medium</option>
+ <option value="hard"> Hard</option>
+ <option value="expert"> Expert</option>
+ </select>
+ </div>
+
+ <div class="form-group">
+ <label>Base Points *</label>
+ <input type="number" id="challengePoints" required 
+ min="50" step="50" placeholder="100" class="form-input">
+ </div>
+ </div>
+
+ <div class="form-group">
+ <label>Description *</label>
+ <textarea id="challengeDescription" required rows="4" 
+ placeholder="Describe the challenge..." class="form-textarea"></textarea>
+ </div>
+
+ <div class="form-group">
+ <label>Flag *</label>
+ <input type="text" id="challengeFlag" required 
+ placeholder="flag{example_flag}" class="form-input">
+ <small>The correct flag that users need to submit</small>
+ </div>
+
+ <div class="form-row">
+ <div class="form-group">
+ <label>Attempts Limit</label>
+ <input type="number" id="challengeAttempts" 
+ min="0" value="0" placeholder="0 = unlimited" class="form-input">
+ </div>
+
+ <div class="form-group">
+ <label>Tags (comma-separated)</label>
+ <input type="text" id="challengeTags" 
+ placeholder="sql, web, injection" class="form-input">
+ </div>
+ </div>
+
+ <div class="form-group">
+ <label>Challenge Files</label>
+ <input type="file" id="challengeFiles" multiple class="form-file">
+ <small>Upload files that users will download for this challenge</small>
+ <div id="uploadedFilesList" class="uploaded-files-list"></div>
+ </div>
+
+ <div class="form-group">
+ <label>Challenge Image/Banner</label>
+ <input type="file" id="challengeImage" accept="image/*" class="form-file">
+ <div id="imagePreview" class="image-preview"></div>
+ </div>
+
+ <div class="form-group">
+ <label>Docker Image (optional)</label>
+ <input type="text" id="challengeDocker" 
+ placeholder="e.g., myregistry/challenge:latest" class="form-input">
+ <small>Docker image for deploying interactive challenges</small>
+ </div>
+
+ <div class="form-group">
+ <label class="checkbox-label">
+ <input type="checkbox" id="challengeActive" checked>
+ <span>Active (visible to users)</span>
+ </label>
+ </div>
+
+ <div class="form-actions">
+ <button type="submit" class="btn-primary"> Save Challenge</button>
+ <button type="button" class="btn-secondary" onclick="closeChallengeModal()">
+ Cancel
+ </button>
+ </div>
+ </form>
+ </div>
+ </div>
+
+ <!-- Hint Modal -->
+ <div class="modal" id="hintModal">
+ <div class="modal-backdrop" onclick="closeHintModal()"></div>
+ <div class="modal-content">
+ <div class="modal-header">
+ <h2 id="hintModalTitle">Add Hint</h2>
+ <button class="close-btn" onclick="closeHintModal()">&times;</button>
+ </div>
+
+ <form id="hintForm">
+ <input type="hidden" id="hintId">
+ <input type="hidden" id="hintChallengeId">
+
+ <div class="form-group">
+ <label>Hint Name *</label>
+ <input type="text" id="hintName" required 
+ placeholder="e.g., First Step" class="form-input">
+ </div>
+
+ <div class="form-group">
+ <label>Hint Description *</label>
+ <textarea id="hintDescription" required rows="3" 
+ placeholder="Enter the hint text..." class="form-textarea"></textarea>
+ </div>
+
+ <div class="form-row">
+ <div class="form-group">
+ <label>Tier *</label>
+ <select id="hintTier" required class="form-select">
+ <option value="1">1 - Easy Hint</option>
+ <option value="2">2 - Medium Hint</option>
+ <option value="3">3 - Strong Hint</option>
+ </select>
+ </div>
+
+ <div class="form-group">
+ <label>Cost (points) *</label>
+ <input type="number" id="hintCost" required 
+ min="0" value="10" class="form-input">
+ </div>
+ </div>
+
+ <div class="form-group">
+ <label>Display Order *</label>
+ <input type="number" id="hintOrder" required 
+ min="1" value="1" class="form-input">
+ </div>
+
+ <div class="form-actions">
+ <button type="submit" class="btn-primary"> Save Hint</button>
+ <button type="button" class="btn-secondary" onclick="closeHintModal()">
+ Cancel
+ </button>
+ </div>
+ </form>
+ </div>
+ </div>
+
+ <!-- Delete Confirmation Modal -->
+ <div class="modal" id="deleteConfirmModal">
+ <div class="modal-backdrop" onclick="closeDeleteConfirmModal()"></div>
+ <div class="modal-content" style="max-width: 500px;">
+ <div class="modal-header">
+ <h2> ï¸ Confirm Delete</h2>
+ <button class="close-btn" onclick="closeDeleteConfirmModal()">&times;</button>
+ </div>
+
+ <div style="padding: 1.5rem;">
+ <div style="background: rgba(255, 68, 68, 0.1); border: 1px solid var(--danger); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+ <p style="color: var(--danger); margin-bottom: 0.5rem;">
+ <strong> ï¸ Warning: This action cannot be undone!</strong>
+ </p>
+ <p style="color: var(--text-muted); font-size: 0.9rem;">
+ You are about to permanently delete: <strong id="deleteTargetName" style="color: var(--text);"></strong>
+ </p>
+ </div>
+
+ <div style="margin-bottom: 1.5rem;">
+ <label style="display: block; margin-bottom: 0.5rem; color: var(--text);">
+ Admin: <strong id="deleteAdminName" style="color: var(--primary);">Admin</strong>
+ </label>
+ </div>
+
+ <div class="form-group">
+ <label for="deletePassword">Enter your password to confirm:</label>
+ <input type="password" 
+ id="deletePassword" 
+ class="form-input" 
+ placeholder="Admin password"
+ autocomplete="off">
+ </div>
+
+ <div class="form-actions" style="margin-top: 1.5rem;">
+ <button type="button" class="btn-danger" onclick="confirmDelete()">
+ Delete Permanently
+ </button>
+ <button type="button" class="btn-secondary" onclick="closeDeleteConfirmModal()">
+ Cancel
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Upload Modal -->
+ <div class="modal" id="uploadModal">
+ <div class="modal-backdrop" onclick="closeUploadModal()"></div>
+ <div class="modal-content">
+ <div class="modal-header">
+ <h2>Upload Files</h2>
+ <button class="close-btn" onclick="closeUploadModal()">&times;</button>
+ </div>
+
+ <div class="upload-area" id="uploadArea">
+ <div class="upload-icon"></div>
+ <p>Drag and drop files here or click to browse</p>
+ <input type="file" id="fileUpload" multiple style="display: none;">
+ <button class="btn-primary" onclick="document.getElementById('fileUpload').click()">
+ Select Files
+ </button>
+ </div>
+
+ <div id="uploadProgress" class="upload-progress" style="display: none;">
+ <div class="progress-bar">
+ <div class="progress-fill" id="uploadProgressBar"></div>
+ </div>
+ <p id="uploadStatus"></p>
+ </div>
+ </div>
+ </div>
+
+ <!-- Role Change Modal -->
+ <div class="modal" id="roleChangeModal">
+ <div class="modal-backdrop" onclick="closeRoleChangeModal()"></div>
+ <div class="modal-content" style="max-width: 500px;">
+ <div class="modal-header">
+ <h2> Change User Role</h2>
+ <button class="close-btn" onclick="closeRoleChangeModal()">&times;</button>
+ </div>
+
+ <div style="padding: 1.5rem;">
+ <div style="background: rgba(0, 242, 254, 0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+ <p style="color: var(--primary); margin-bottom: 0.5rem;">
+ <strong>️ Security Check Required</strong>
+ </p>
+ <p style="color: var(--text-muted); font-size: 0.9rem;">
+ Changing user: <strong id="roleChangeUsername" style="color: var(--text);"></strong>
+ </p>
+ </div>
+
+ <input type="hidden" id="roleChangeUserId">
+
+ <div class="form-group">
+ <label for="newRole">Select New Role:</label>
+ <select id="newRole" class="form-select">
+ <option value="user"> User</option>
+ <option value="admin">️ Admin</option>
+ </select>
+ </div>
+
+ <div class="form-group">
+ <label for="roleChangePassword">Enter Your Admin Password:</label>
+ <input type="password" 
+ id="roleChangePassword" 
+ class="form-input" 
+ placeholder="Admin password"
+ autocomplete="off">
+ </div>
+
+ <div class="form-group">
+ <label for="otpCode">Enter OTP Code:</label>
+ <input type="text" 
+ id="otpCode" 
+ class="form-input" 
+ placeholder="6-digit OTP"
+ maxlength="6"
+ pattern="[0-9]{6}"
+ autocomplete="off">
+ <small style="color: var(--text-muted);">OTP will be sent to your email</small>
+ </div>
+
+ <button type="button" class="btn-secondary" onclick="requestOTP()" style="width: 100%; margin-bottom: 1rem;" id="requestOtpBtn">
+ Request OTP
+ </button>
+
+ <div class="form-actions" style="margin-top: 1.5rem;">
+ <button type="button" class="btn-primary" onclick="confirmRoleChange()">
+ Change Role
+ </button>
+ <button type="button" class="btn-secondary" onclick="closeRoleChangeModal()">
+ Cancel
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - secXplore</title>
+    <link rel="stylesheet" href="leaderboard.css">
+</head>
+<body>
+    <div class="cyber-grid"></div>
+    
+    <div class="particles" id="particles"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">
+                <span>🕵︎</span>
+                <span>secXplore</span>
+            </div>
+            <div class="nav-links">
+                <a href="home.html" class="nav-link">Home</a>
+                <a href="challenge.html" class="nav-link">Challenges</a>
+                <a href="leaderboard.html" class="nav-link">Scoreboard</a>
+                <a href="login.html" class="nav-link sign-in-btn">Sign in</a>
+            </div>
+            <div class="nav-user-area">
+        <!-- โหมด guest -->
+                <!-- โหมดที่ล็อกอินแล้ว -->
+                <a href="profile.html" class="nav-link profile-pill" id="navProfileBtn" style="display:none">
+                    <img src="" alt="avatar" class="nav-avatar" id="navAvatar">
+                    <span id="navUsername">@user</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Leaderboard Header -->
+        <div class="leaderboard-header">
+            <h1 class="page-title">
+                <span class="trophy-icon">🏆</span>
+                กระดานผู้นำ
+            </h1>
+            <p class="subtitle">อันดับนักรบไซเบอร์ยอดเยี่ยม</p>
+        </div>
+
+        <!-- Podium Section -->
+        <div class="podium-container">
+            <div class="podium-item second-place">
+                <div class="podium-avatar">
+                    <div class="avatar-circle">SP</div>
+                    <div class="crown silver">🥈</div>
+                </div>
+                <div class="podium-info">
+                    <h3>SecurityPro</h3>
+                    <p class="level">Level 12</p>
+                    <p class="xp">4,850 XP</p>
+                </div>
+                <div class="podium-base second">
+                    <div class="rank-number">2</div>
+                </div>
+            </div>
+
+            <div class="podium-item first-place">
+                <div class="podium-avatar">
+                    <div class="avatar-circle">CN</div>
+                    <div class="crown gold">👑</div>
+                </div>
+                <div class="podium-info">
+                    <h3>CyberNinja</h3>
+                    <p class="level">Level 15</p>
+                    <p class="xp">5,420 XP</p>
+                </div>
+                <div class="podium-base first">
+                    <div class="rank-number">1</div>
+                </div>
+            </div>
+
+            <div class="podium-item third-place">
+                <div class="podium-avatar">
+                    <div class="avatar-circle">HD</div>
+                    <div class="crown bronze">🥉</div>
+                </div>
+                <div class="podium-info">
+                    <h3>HackDefender</h3>
+                    <p class="level">Level 11</p>
+                    <p class="xp">4,200 XP</p>
+                </div>
+                <div class="podium-base third">
+                    <div class="rank-number">3</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Leaderboard -->
+        <div class="leaderboard-container">
+            <!-- Current Rank Widget (Top Right Corner) -->
+            <div class="current-rank-widget">
+                <div class="rank-widget-header">อันดับปัจจุบัน</div>
+                <div class="rank-widget-number">#42</div>
+                <div class="rank-widget-total">จาก 150 คน</div>
+            </div>
+
+            <div class="leaderboard-controls">
+                <div class="filter-buttons">
+                    <button class="filter-btn active">ทั้งหมด</button>
+                    <button class="filter-btn">สัปดาห์นี้</button>
+                    <button class="filter-btn">เดือนนี้</button>
+                </div>
+            </div>
+
+            <div class="leaderboard-list" id="leaderboardList">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <!-- User's Current Rank -->
+            <div class="user-rank-highlight" id="userRankHighlight">
+                <div class="rank-indicator">
+                    <span class="your-rank-label">อันดับของคุณ</span>
+                </div>
+                <div class="user-rank-simple">
+                    <div class="rank-number-large">42</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="leaderboard.js"></script>
+</body>
+</html>

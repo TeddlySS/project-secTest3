@@ -957,7 +957,7 @@ Decoded Payload: {"user":"user","role":"user","iat":1633024800}
                 </ul>
                 </div>
                 <div style="text-align: center; margin: 2rem 0;">
-                <img src="asset/1_Hbd_20th.png"
+                <img src="1_Hbd_20th.png"
                             style="max-width: 100%; border: 2px solid var(--primary); border-radius: 10px;"
                             alt="Birthday Image">
                 <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.9rem;">
@@ -1023,7 +1023,7 @@ Decoded Payload: {"user":"user","role":"user","iat":1633024800}
                 </ul>
                 </div>
                 <div style="text-align: center; margin: 2rem 0;">
-                <img src="asset/2_Where_is_it.jpg" 
+                <img src="2_Where_is_it.jpg" 
 
                                 style="max-width: 100%; border: 2px solid var(--primary); border-radius: 10px;"
 
@@ -1113,7 +1113,7 @@ Decoded Payload: {"user":"user","role":"user","iat":1633024800}
                         </ul>
                     </div>
                     <div style="text-align: center; margin: 2rem 0;">
-                        <img src="asset/3_flag_img.png" 
+                        <img src="3_flag_img.png" 
                             style="max-width: 100%; border: 2px solid var(--primary); border-radius: 10px;">
                     </div>
 
@@ -3422,3 +3422,4 @@ window.closeModal = function() {
 window.confirmBackToCategory = function() {
     document.getElementById('interactiveModal').classList.remove('active');
 };
+

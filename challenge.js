@@ -743,7 +743,7 @@ Decoded Payload: {"user":"user","role":"user","iat":1633024800}
                         <ul style="margin: 0.5rem 0; padding-left: 2rem;">
                             <li>Brute force ทุกค่า key ที่เป็นไปได้ (256 keys)</li>
                             <li>หาผลลัพธ์ที่เป็น readable English text</li>
-                            <li>Flag จะอยู่ในรูปแบบ secXplore{...}</li>
+                            <li>Flag จะอยู่ในรูปแบบ CTF{...}</li>
                         </ul>
                     </div>
 
@@ -780,7 +780,7 @@ Decoded Payload: {"user":"user","role":"user","iat":1633024800}
 
                         <button class="hint-btn" onclick="toggleHint('xorhint3')">💡 Hint 3: Flag Format</button>
                         <div id="xorhint3" class="hint-content">
-                            Flag เริ่มต้นด้วย "secXplore{"<br>
+                            Flag เริ่มต้นด้วย "CTF{"<br>
                             ใช้ข้อมูลนี้ช่วยหา key ที่ถูกต้อง<br>
                             ถ้า ciphertext[0] XOR 's' = key
                         </div>
@@ -957,7 +957,7 @@ Decoded Payload: {"user":"user","role":"user","iat":1633024800}
                 </ul>
                 </div>
                 <div style="text-align: center; margin: 2rem 0;">
-                <img src="assets/images/birthday.png"
+                <img src="asset/1_Hbd_20th.png"
                             style="max-width: 100%; border: 2px solid var(--primary); border-radius: 10px;"
                             alt="Birthday Image">
                 <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.9rem;">
@@ -997,7 +997,7 @@ Decoded Payload: {"user":"user","role":"user","iat":1633024800}
                 <div id="birthdayhint3" class="hint-content" style="display:none;">
                             Use: strings birthday.jpg | grep -i "sec"<br>
                             Or check specific field: exiftool -Copyright birthday.jpg<br>
-                            Flag format: secXplore{...}
+                            Flag format: CTF{...}
                 </div>
                 </div>
                 <div class="flag-input">
@@ -1023,7 +1023,7 @@ Decoded Payload: {"user":"user","role":"user","iat":1633024800}
                 </ul>
                 </div>
                 <div style="text-align: center; margin: 2rem 0;">
-                <img src="assets/images/Where_is_it.jpg" 
+                <img src="asset/2_Where_is_it.jpg" 
 
                                 style="max-width: 100%; border: 2px solid var(--primary); border-radius: 10px;"
 
@@ -1084,7 +1084,7 @@ Decoded Payload: {"user":"user","role":"user","iat":1633024800}
 
                                 (lowercase, no spaces)<br>
 
-                                Format: secXplore{md5hash}
+                                Format: CTF{md5hash}
                 </div>
                 </div>
                 <div class="flag-input">
@@ -1113,7 +1113,7 @@ Decoded Payload: {"user":"user","role":"user","iat":1633024800}
                         </ul>
                     </div>
                     <div style="text-align: center; margin: 2rem 0;">
-                        <img src="assets/images/white_flag.png" 
+                        <img src="asset/3_flag_img.png" 
                             style="max-width: 100%; border: 2px solid var(--primary); border-radius: 10px;">
                     </div>
 
@@ -1293,7 +1293,7 @@ Decoded Payload: {"user":"user","role":"user","iat":1633024800}
                         <button class="hint-btn" onclick="toggleHint('packethint3')">💡 Hint 3: Flag Location</button>
                         <div id="packethint3" class="hint-content" style="display:none;">
                             POST /api/login contains:<br>
-                            username=admin&password=secXplore{p4ck3t_sn1ff3r_pl41nt3xt}<br>
+                            username=admin&password=CTF{p4ck3..}<br>
                             Flag is in password field
                         </div>
                     </div>
@@ -2189,315 +2189,1159 @@ window.confirmHint = function() {
 };
 
 // ============================================
-// 8. SIMULATION LOGIC (COMPLETE ALL 24 CHALLENGES)
+// 6. INTERACTIVE CHALLENGE LOGIC (from challenge1.js)
 // ============================================
 
-/* --- 1. WEB SECURITY --- */
+// Web Security - SQL Injection
 
-// SQL Injection
+let sqlAttemptCount = 0;
+const MAX_SQL_ATTEMPTS = 10;
+
 window.attemptSQLLogin = function() {
+    if (sqlAttemptCount >= MAX_SQL_ATTEMPTS) {
+        showSQLResult('danger', '❌ Maximum attempts reached! Refresh to try again.');
+        return;
+    }
+    
+    sqlAttemptCount++;
+    document.getElementById('sqlAttempts').textContent = sqlAttemptCount;
+    
     const user = document.getElementById('sqlUser').value;
     const pass = document.getElementById('sqlPass').value;
-    const result = document.getElementById('sqlResult');
-    const debug = document.getElementById('sqlDebug');
+    const resultPanel = document.getElementById('sqlResult');
+    const debugPanel = document.getElementById('sqlDebug');
     
-    // Logic: ต้องมี ' OR '1'='1 หรือการ comment #
-    const isBypass = (user.toLowerCase().includes("' or '1'='1") || user.includes("' || '1'='1")) && (user.includes('#') || user.includes('--'));
-    
-    if (isBypass) {
-        result.className = 'result-panel success';
-        result.innerHTML = `✅ <strong>Login Successful!</strong><br>User: admin (ID: 1)<br>Flag: <code style="color:var(--success)">CTF{sql_1nj3ct10n_byp4ss}</code>`;
-        if(debug) debug.innerHTML = `Query: SELECT * FROM users WHERE user='${user}' AND pass='...'<br><span style="color:#0f0">Status: BYPASSED (Admin)</span>`;
-    } else {
-        result.className = 'result-panel error';
-        result.innerHTML = `❌ <strong>Login Failed</strong>`;
-        if(debug) debug.innerHTML = `Query: SELECT * FROM users WHERE user='${user}'...<br><span style="color:red">Status: REJECTED</span>`;
+    if (!user || !pass) {
+        showSQLResult('warning', '⚠️ Please enter both username and password');
+        updateDebug('No input provided', '');
+        return;
     }
-};
+    
+    // Build the SQL query (for display)
+    const query = `SELECT * FROM users WHERE username='${user}' AND password='${pass}'`;
+    
+    // Check for blocked patterns (case-sensitive)
+    const blockedPatterns = ['OR', 'AND', '--', '/*'];
+    let blocked = false;
+    let blockedPattern = '';
+    
+    for (let pattern of blockedPatterns) {
+        if (user.includes(pattern) || pass.includes(pattern)) {
+            blocked = true;
+            blockedPattern = pattern;
+            break;
+        }
+    }
+    
+    if (blocked) {
+        showSQLResult('danger', `❌ Security Filter Triggered!<br>Blocked pattern detected: <code>${blockedPattern}</code><br>Try to bypass the filter...`);
+        updateDebug(query, 'BLOCKED');
+        return;
+    }
+    
+    // Check for successful injection patterns
+    const successPatterns = [
+        /admin'.*or.*'1'='1'/i,
+        /admin'.*\|\|.*1=1/i,
+        /admin'.*or.*1=1/i,
+        /admin'.*union/i
+    ];
+    
+    let successful = false;
+    for (let pattern of successPatterns) {
+        if (user.toLowerCase().match(pattern)) {
+            // Check if it uses comment to close the query
+            if (user.includes('#') || user.includes(';')) {
+                successful = true;
+                break;
+            }
+        }
+    }
+    
+    if (successful) {
+        showSQLResult('success', `✅ Authentication Successful!<br><br>
+            <div style="margin-top: 1rem; padding: 1rem; background: rgba(0,255,136,0.1); border-radius: 8px;">
+                <strong>Access Level: ADMINISTRATOR</strong><br>
+                User ID: 1<br>
+                Username: admin<br>
+                Role: superadmin<br><br>
+                🎉 Flag: <code style="color: var(--success); font-size: 1.1rem;">CTF{sql_1nj3ct10n_byp4ss}</code>
+            </div>`);
+        updateDebug(query, 'SUCCESS', 'Query returned 1 row(s)<br>Admin access granted!');
+    } else if (user.includes("'")) {
+        showSQLResult('warning', `⚠️ SQL Syntax Error<br>Your injection attempt caused a syntax error.<br>Check the debug panel for details.`);
+        updateDebug(query, 'SYNTAX ERROR', 'Unclosed quote or invalid syntax');
+    } else {
+        showSQLResult('danger', `❌ Login Failed<br>Invalid credentials<br><small>Hint: There's a SQL injection vulnerability here...</small>`);
+        updateDebug(query, 'FAILED', 'Query returned 0 row(s)');
+    }
+}
 
-// Command Injection
+function showSQLResult(type, message) {
+    const resultPanel = document.getElementById('sqlResult');
+    const colors = {
+        success: 'rgba(0, 255, 136, 0.2)',
+        danger: 'rgba(255, 0, 102, 0.2)',
+        warning: 'rgba(255, 170, 0, 0.2)'
+    };
+    const borderColors = {
+        success: 'var(--success)',
+        danger: 'var(--danger)',
+        warning: 'var(--warning)'
+    };
+    
+    resultPanel.style.background = colors[type];
+    resultPanel.style.border = `2px solid ${borderColors[type]}`;
+    resultPanel.innerHTML = message;
+    
+    // Animate
+    resultPanel.style.animation = 'none';
+    setTimeout(() => {
+        resultPanel.style.animation = 'slideIn 0.3s ease';
+    }, 10);
+}
+
+function updateDebug(query, status, details = '') {
+    const debugPanel = document.getElementById('sqlDebug');
+    const statusColors = {
+        'SUCCESS': 'var(--success)',
+        'FAILED': 'var(--danger)',
+        'BLOCKED': 'var(--warning)',
+        'SYNTAX ERROR': 'var(--danger)'
+    };
+    
+    debugPanel.innerHTML = `
+        <div style="margin-bottom: 1rem;">
+            <strong style="color: var(--secondary);">Query Executed:</strong><br>
+            <code style="color: var(--light); word-break: break-all;">${query}</code>
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong style="color: var(--secondary);">Status:</strong> 
+            <span style="color: ${statusColors[status] || 'var(--light)'};">${status}</span>
+        </div>
+        ${details ? `<div><strong style="color: var(--secondary);">Details:</strong><br>${details}</div>` : ''}
+    `;
+}
+// Web Security - Command Injection
 window.executeCMD = function() {
     const input = document.getElementById('cmdInput').value;
     const result = document.getElementById('cmdResult');
-    if (!input) return;
+    
+    if (!input) {
+        result.innerHTML = `<span style="color: var(--warning);">⚠️ Please enter a target IP</span>`;
+        return;
+    }
 
-    if (input.includes(';') || input.includes('&&') || input.includes('|')) {
-        if (input.includes('ls') || input.includes('dir')) {
-            result.innerHTML = `<pre>files:\nindex.php\nstyle.css\nflag.txt</pre>`;
-        } else if (input.includes('cat') && input.includes('flag')) {
-            result.innerHTML = `<pre style="color:var(--success)">CTF{c0mm4nd_1nj3ct10n_pwn3d}</pre>`;
+    if (input.includes(';') || input.includes('&&') || input.includes('||') || input.includes('|')) {
+        const parts = input.split(/[;&|]+/);
+        const commands = parts.slice(1).join(' ').toLowerCase();
+        
+        if (commands.includes('ls') || commands.includes('dir')) {
+            result.innerHTML = `<span style="color: var(--light);">Pinging ${parts[0]}...
+PING ${parts[0]} (${parts[0]}) 56(84) bytes of data.
+64 bytes from ${parts[0]}: icmp_seq=1 ttl=64 time=0.042 ms
+
+--- ${parts[0]} ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss
+
+Executing: ${commands}
+Files found:
+index.php
+config.php
+uploads/
+.htaccess
+flag.txt
+
+Hint: Try reading flag.txt with 'cat' command!</span>`;
+        } else if (commands.includes('cat') && commands.includes('flag')) {
+            result.innerHTML = `<span style="color: var(--success);">Pinging ${parts[0]}...
+PING ${parts[0]} (${parts[0]}) 56(84) bytes of data.
+64 bytes from ${parts[0]}: icmp_seq=1 ttl=64 time=0.038 ms
+
+Executing: ${commands}
+
+✅ Content of flag.txt:
+CTF{c0mm4nd_1nj3ct10n_pwn3d}
+
+Copy the flag and submit below!</span>`;
         } else {
-            result.innerHTML = `<pre>Command executed. (Try listing files)</pre>`;
+            result.innerHTML = `<span style="color: var(--secondary);">Pinging ${parts[0]}...
+PING ${parts[0]} (${parts[0]}) 56(84) bytes of data.
+64 bytes from ${parts[0]}: icmp_seq=1 ttl=64 time=0.045 ms
+
+Executing: ${commands}
+Command executed but no relevant output.</span>`;
         }
     } else {
-        result.innerHTML = `<pre>PING ${input} (127.0.0.1): 56 data bytes\n64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.032 ms</pre>`;
-    }
-};
+        result.innerHTML = `<span style="color: var(--light);">Pinging ${input}...
+PING ${input} (${input}) 56(84) bytes of data.
+64 bytes from ${input}: icmp_seq=1 ttl=64 time=0.042 ms
 
-// XSS Cookie Stealer
+--- ${input} ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.042/0.042/0.042/0.000 ms</span>`;
+    }
+}
+
+// Web Security - XSS Cookie Stealer
 window.submitXSS = function() {
-    const val = document.getElementById('xssInput').value;
-    const res = document.getElementById('xssResult');
+    const input = document.getElementById('xssInput').value;
+    const result = document.getElementById('xssResult');
     const preview = document.getElementById('xssPreview');
     
-    if (val.toLowerCase().includes('<script>')) {
-        res.innerHTML = '<span style="color:red">❌ Blocked by XSS Filter (<script> tag)</span>';
+    if (!input) {
+        result.innerHTML = `<span style="color: var(--warning);">⚠️ Please enter a comment</span>`;
+        return;
+    }
+
+    if (input.toLowerCase().includes('<script') || input.toLowerCase().includes('onerror') || input.toLowerCase().includes('onclick')) {
+        result.innerHTML = `<span style="color: var(--danger);">❌ XSS Filter: Blocked dangerous patterns</span>`;
         preview.innerHTML = '';
-    } else if ((val.includes('<img') || val.includes('<svg') || val.includes('<body')) && 
-               (val.includes('onerror') || val.includes('onload')) && 
-               val.includes('document.cookie')) {
-        res.innerHTML = '<span style="color:var(--success)">✅ Admin Cookie Stolen: admin_sess=CTF{xss_c00k13_st34l3r}</span>';
-        preview.innerHTML = val; 
-    } else {
-        res.innerHTML = 'Comment Posted (No exploit detected).';
-        preview.innerText = val;
+        return;
     }
-};
 
-// JWT Token
+    if (input.includes('<svg') || input.includes('<img') || input.includes('<iframe') || input.includes('onload')) {
+        result.innerHTML = `<span style="color: var(--success);">✅ Comment Posted Successfully!
+
+XSS Payload Executed!
+Admin Cookie Stolen: admin_session=CTF{xss_c00k13_st34l3r}
+
+Copy the flag and submit below!</span>`;
+        preview.innerHTML = `<div style="color: var(--success);">Comment Preview: ${input.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`;
+    } else {
+        result.innerHTML = `<span style="color: var(--secondary);">Comment posted but no XSS triggered. Try different payloads!</span>`;
+        preview.innerHTML = `<div>Comment Preview: ${input.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`;
+    }
+}
+// Web Security - JWT Token Manipulation
 window.verifyJWT = function() {
-    const token = document.getElementById('jwtInput').value;
-    const res = document.getElementById('jwtResult');
-    // Logic ง่ายๆ เช็ค keyword
-    if (token.includes('HS256') && token.includes('admin')) {
-        res.innerHTML = '<span style="color:var(--success)">✅ Access Granted! Flag: CTF{jwt_alg0r1thm_c0nfus10n}</span>';
-    } else {
-        res.innerHTML = '<span style="color:red">❌ Invalid Signature or Role is not admin</span>';
+    const token = document.getElementById('jwtInput').value.trim();
+    const result = document.getElementById('jwtResult');
+    
+    if (!token) {
+        result.innerHTML = `<span style="color: var(--warning);">⚠️ Please enter a JWT token</span>`;
+        return;
     }
-};
-window.decodeJWT = () => document.getElementById('toolOutput').innerText = 'Header: {"alg":"RS256"}\nPayload: {"user":"user", "role":"user"}';
-window.showPublicKey = () => document.getElementById('toolOutput').innerText = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAA...\n(Hint: Use this as HMAC secret for HS256)';
-window.createHS256 = () => document.getElementById('jwtInput').value = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoidXNlciIsInJvbGUiOiJhZG1pbiJ9.signature_modified';
 
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+            result.innerHTML = `<span style="color: var(--danger);">❌ Invalid JWT format</span>`;
+            return;
+        }
 
-/* --- 2. CRYPTOGRAPHY --- */
+        const header = JSON.parse(atob(parts[0]));
+        const payload = JSON.parse(atob(parts[1]));
 
-// Multi-Layer
-window.decodeROT13 = () => {
-    let text = document.getElementById('cipherInput').value || "FrpKcyber";
-    let res = text.replace(/[a-zA-Z]/g,c=>String.fromCharCode((c<="Z"?90:122)>=(c=c.charCodeAt(0)+13)?c:c-26));
-    document.getElementById('cipherOutput').innerText = "ROT13 Result: " + res;
-};
-window.decodeCaesar = () => document.getElementById('cipherOutput').innerText += "\nCaesar(-3): CTF{mult1_l4y3r_c1ph3r}";
-window.decodeAll = () => document.getElementById('cipherOutput').innerText = "Auto Decoded: CTF{mult1_l4y3r_c1ph3r}";
+        if (header.alg === 'HS256' && payload.role === 'admin') {
+            result.innerHTML = `<span style="color: var(--success);">✅ Token Verified Successfully!
 
-// XOR
-window.xorDecrypt = () => {
-    const k = document.getElementById('xorKey').value;
-    // เช็ค key 79 (ฐาน 16) หรือ 121 (ฐาน 10)
-    if(k === '79' || k.toLowerCase() === 'x79') {
-        document.getElementById('xorOutput').innerText = "Decrypted: CTF{x0r_s1ngl3_byt3}";
-    } else {
-        document.getElementById('xorOutput').innerText = "Garbage data... (Try checking hints)";
+Access Level: ADMIN
+Algorithm: HS256
+Flag: CTF{jwt_alg0r1thm_c0nfus10n}
+
+You successfully exploited the algorithm confusion vulnerability!</span>`;
+        } else if (payload.role === 'admin') {
+            result.innerHTML = `<span style="color: var(--warning);">⚠️ Role is admin but wrong algorithm. Try HS256!</span>`;
+        } else {
+            result.innerHTML = `<span style="color: var(--danger);">❌ Access Denied: Insufficient privileges</span>`;
+        }
+    } catch (e) {
+        result.innerHTML = `<span style="color: var(--danger);">❌ Token decoding error</span>`;
     }
-};
-window.xorBruteForce = () => document.getElementById('xorOutput').innerText = "Scanning 00-FF...\n... Found candidate at 0x79: CTF{x0r_s1ngl3_byt3}";
+}
 
-// RSA
-window.calculateCRT = () => document.getElementById('rsaOutput').innerText = "Using CRT on c1, c2, c3...\nm^3 = 123456789...";
-window.calculateCubeRoot = () => document.getElementById('rsaOutput').innerText += "\nCalculating Cube Root...\nm = 4354467...";
-window.convertToText = () => document.getElementById('rsaOutput').innerText += "\n\n🎉 Flag Found: CTF{rs4_sm4ll_3xp0n3nt}";
+window.decodeJWT = function() {
+    document.getElementById('toolOutput').innerHTML = `Original Token Decoded:
+Header: {"alg":"RS256","typ":"JWT"}
+Payload: {"user":"user","role":"user","iat":1633024800}
 
-// Custom Cipher
-window.decryptCustom = () => {
+To become admin, change "role":"user" to "role":"admin"`;
+}
+
+window.showPublicKey = function() {
+    document.getElementById('toolOutput').innerHTML = `Public Key (PEM):
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+-----END PUBLIC KEY-----
+
+Hint: Use this as HMAC secret for HS256!`;
+}
+
+window.createHS256 = function() {
+    document.getElementById('toolOutput').innerHTML = `Sample HS256 Token with admin role:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoidXNlciIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTYzMzAyNDgwMH0.signature
+
+Try pasting this in the verify box!`;
+}
+
+// Cryptography - Multi-Layer Cipher
+window.decodeROT13 = function() {
+    const input = document.getElementById('cipherInput').value || 'FrpKcyber{p3e4_y4l3e_qrpelcg_z4fgre}';
+    const decoded = input.replace(/[a-zA-Z]/g, c => 
+        String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
+    );
+    document.getElementById('cipherOutput').innerHTML = `ROT13 Result: ${decoded}`;
+}
+
+window.decodeBase64Cipher = function() {
+    const input = document.getElementById('cipherInput').value;
+    if (!input) {
+        document.getElementById('cipherOutput').innerHTML = 'Please enter text to decode';
+        return;
+    }
+    try {
+        const decoded = atob(input);
+        document.getElementById('cipherOutput').innerHTML = `Base64 Result: ${decoded}`;
+    } catch (e) {
+        document.getElementById('cipherOutput').innerHTML = 'Invalid Base64 string';
+    }
+}
+
+window.decodeCaesar = function() {
+    const input = document.getElementById('cipherInput').value || 'CTF{mult1_l4y3r_c1ph3r}';
+    const decoded = input.replace(/[a-zA-Z]/g, c => {
+        const base = c <= 'Z' ? 65 : 97;
+        return String.fromCharCode(((c.charCodeAt(0) - base - 3 + 26) % 26) + base);
+    });
+    document.getElementById('cipherOutput').innerHTML = `Caesar (shift -3) Result: ${decoded}`;
+}
+
+window.decodeAll = function() {
+    const input = 'FrpKcyber{p3e4_y4l3e_qrpelcg_z4fgre}';
+    let step1 = input.replace(/[a-zA-Z]/g, c => 
+        String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
+    );
+    let step3 = step1.replace(/[a-zA-Z]/g, c => {
+        const base = c <= 'Z' ? 65 : 97;
+        return String.fromCharCode(((c.charCodeAt(0) - base - 3 + 26) % 26) + base);
+    });
+    document.getElementById('cipherOutput').innerHTML = `Step 1 (ROT13): ${step1}
+Step 2 (No Base64 needed): ${step1}
+Step 3 (Caesar -3): ${step3}
+
+Final Answer: ${step3}`;
+}
+
+// Cryptography - XOR Brute Force
+
+window.xorDecrypt = function() {
+    const keyHex = document.getElementById('xorKey').value;
+    if (!keyHex || keyHex.length !== 2) {
+        document.getElementById('xorOutput').innerHTML = 'Please enter a 2-digit hex key (00-FF)';
+        return;
+    }
+    const key = parseInt(keyHex, 16);
+    const encrypted = '1c060b59121b0d1612461a5d4c1a0d465b0e0b1a5d454c0d';
+    let decrypted = '';
+    for (let i = 0; i < encrypted.length; i += 2) {
+        const byte = parseInt(encrypted.substr(i, 2), 16);
+        decrypted += String.fromCharCode(byte ^ key);
+    }
+    document.getElementById('xorOutput').innerHTML = `Key 0x${keyHex}: ${decrypted}`;
+}
+
+window.xorBruteForce = function() {
+    const encrypted = '1c060b59121b0d1612461a5d4c1a0d465b0e0b1a5d454c0d';
+    let output = 'Brute Force Results:\n\n';
+    for (let key = 0; key < 256; key++) {
+        let decrypted = '';
+        for (let i = 0; i < encrypted.length; i += 2) {
+            const byte = parseInt(encrypted.substr(i, 2), 16);
+            decrypted += String.fromCharCode(byte ^ key);
+        }
+        if (decrypted.includes('secXplore') || /^[a-zA-Z{}_0-9]+$/.test(decrypted)) {
+            output += `Key 0x${key.toString(16).padStart(2, '0')}: ${decrypted}\n`;
+        }
+    }
+    document.getElementById('xorOutput').innerHTML = output || 'No readable results found. Try key 0x79';
+}
+
+// Cryptography - RSA Small Exponent Attack
+
+window.calculateCRT = function() {
+    document.getElementById('rsaOutput').innerHTML = `Calculating Chinese Remainder Theorem...
+
+Given:
+c1 ≡ m³ (mod n1)
+c2 ≡ m³ (mod n2)
+c3 ≡ m³ (mod n3)
+
+Using CRT to find m³ mod (n1*n2*n3)
+Result: m³ = 7067388259113537318333
+
+Next: Calculate cube root`;
+}
+
+window.calculateCubeRoot = function() {
+    document.getElementById('rsaOutput').innerHTML = `Calculating cube root of m³...
+
+m³ = 7067388259113537318333
+m = ∛(m³) = 1919252867
+
+Converting to bytes...
+Result: CTF{rs4_sm4ll_3xp0n3nt}`;
+}
+
+window.convertToText = function() {
+    document.getElementById('rsaOutput').innerHTML = `Converting number to text...
+
+1919252867 → bytes → ASCII
+Result: CTF{rs4_sm4ll_3xp0n3nt}
+
+Flag found!`;
+}
+
+// Cryptography - Custom Cipher Analysis
+window.decryptCustom = function() {
     const key = document.getElementById('customKey').value;
-    if(key === 'CTF') document.getElementById('customOutput').innerText = "CTF{cust0m_c1ph3r_br0k3n}";
-    else document.getElementById('customOutput').innerText = "Wrong Key or Algorithm";
-};
-window.analyzeCustom = () => document.getElementById('customOutput').innerText = "Analysis: It's a Vigenere cipher but shifts depend on position index.";
+    const ciphertext = document.getElementById('customCiphertext').value;
+    
+    let plaintext = '';
+    for (let i = 0; i < ciphertext.length; i++) {
+        const char = ciphertext[i];
+        if (/[a-zA-Z]/.test(char)) {
+            const shift = (key.charCodeAt(i % key.length) + i) % 26;
+            const base = char <= 'Z' ? 65 : 97;
+            plaintext += String.fromCharCode(((char.charCodeAt(0) - base - shift + 26) % 26) + base);
+        } else {
+            plaintext += char;
+        }
+    }
+    
+    document.getElementById('customOutput').innerHTML = `Decrypted: ${plaintext}`;
+}
 
+window.analyzeCustom = function() {
+    document.getElementById('customOutput').innerHTML = `Algorithm Analysis:
+==================
+Type: Modified Vigenere Cipher
+Key: "CTF" (repeating)
+Position-dependent shift: (key[i % len] + i) % 26
 
-/* --- 3. DIGITAL FORENSICS --- */
+To decrypt:
+plaintext[i] = (ciphertext[i] - shift) % 26`;
+}
 
-// Birthday EXIF
+// Forensics - Birthday EXIF Data
 window.executeEXIFCommand = function() {
-    const cmd = document.getElementById('exifCommand').value.toLowerCase();
-    const term = document.getElementById('exifTerminal');
-    term.innerHTML += `\n$ ${cmd}`;
+    const input = document.getElementById('exifCommand');
+    const command = input.value.trim();
+    const terminal = document.getElementById('exifTerminal');
+    if (!command) return;
     
-    if (cmd.includes('exiftool') && (cmd.includes('-copyright') || cmd.includes('-a') || cmd.includes('birthday'))) {
-        term.innerHTML += `\n[Metadata Found]\nCamera Model: Canon EOS\nCopyright: CTF{ex1f_h1dd3n_m3ss4g3}\nUser Comment: Happy Birthday!`;
-    } else if (cmd.includes('strings')) {
-        term.innerHTML += `\n...JFIF...\nCTF{ex1f_h1dd3n_m3ss4g3}\n...`;
-    } else {
-        term.innerHTML += `\nFile: birthday.jpg (JPEG Image)`;
+    // แสดงคำสั่งที่พิมพ์
+    terminal.innerHTML += `\n$ ${command}`;
+    const cmd = command.toLowerCase();
+    
+    // exiftool with -a flag (all tags)
+    if (cmd.includes('exiftool') && cmd.includes('birthday') && cmd.includes('-a')) {
+        terminal.innerHTML += `
+ExifTool Version Number         : 12.40
+File Name                       : birthday.jpg
+File Size                       : 245 KB
+File Type                       : JPEG
+File Type Extension             : jpg
+MIME Type                       : image/jpeg
+Image Width                     : 1200
+Image Height                    : 800
+Encoding Process                : Baseline DCT, Huffman coding
+Bits Per Sample                 : 8
+Color Components                : 3
+Y Cb Cr Sub Sampling            : YCbCr4:2:0 (2 2)
+Camera Model Name               : Canon EOS 5D
+Date/Time Original              : 2024:01:20 14:30:00
+Create Date                     : 2024:01:20 14:30:00
+Artist                          : Anonymous
+Copyright                       : secXplore
+User Comment                    : Happy 20th Birthday!
+Software                        : Adobe Photoshop CS6
+Color Space                     : sRGB
+Exif Image Width                : 1200
+Exif Image Height               : 800
+GPS Position                    : (not set)`;
     }
-};
+    // exiftool with -Copyright flag
+    else if (cmd.includes('exiftool') && cmd.includes('-copyright')) {
+        terminal.innerHTML += `
+Copyright                       : secXplore`;
+    }
+    // exiftool with -G flag (group names)
+    else if (cmd.includes('exiftool') && cmd.includes('birthday') && cmd.includes('-g')) {
+        terminal.innerHTML += `
+[File]          File Name                       : birthday.jpg
+[File]          File Size                       : 245 KB
+[File]          File Type                       : JPEG
+[EXIF]          Camera Model Name               : Canon EOS 5D
+[EXIF]          Date/Time Original              : 2024:01:20 14:30:00
+[EXIF]          Artist                          : Anonymous
+[IFD0]          Copyright                       : CTF{ex1f_h1dd3n_m3ss4g3}
+[EXIF]          User Comment                    : Happy 20th Birthday!`;
+    }
+    // basic exiftool
+    else if (cmd.includes('exiftool') && cmd.includes('birthday')) {
+        terminal.innerHTML += `
+File Name                       : birthday.jpg
+File Size                       : 245 KB
+File Type                       : JPEG
+Image Width                     : 1200
+Image Height                    : 800
+Camera Model Name               : Canon EOS 5D
+Date/Time Original              : 2024:01:20 14:30:00
+Artist                          : Anonymous
+Try: exiftool -a birthday.jpg for all tags`;
+    }
+    // strings command
+    else if (cmd.includes('strings') && cmd.includes('birthday')) {
+        if (cmd.includes('grep') && cmd.includes('sec')) {
+            terminal.innerHTML += `
+Searching for 'sec' pattern...
+CTF{ex1f_h1dd3n_m3ss4g3}`;
+        } else {
+            terminal.innerHTML += `
+JFIF
+Adobe
+Photoshop
+Canon
+EOS 5D
+Anonymous
+Happy 20th Birthday!
+CTF{ex1f_h1dd3n_m3ss4g3}
+sRGB
+...`;
+        }
+    }
+    // file command
+    else if (cmd === 'file birthday.jpg') {
+        terminal.innerHTML += `
+birthday.jpg: JPEG image data, JFIF standard 1.01, resolution (DPI), density 72x72, segment length 16, baseline, precision 8, 1200x800, components 3`;
+    }
+    // ls command
+    else if (cmd === 'ls' || cmd === 'ls -la') {
+        terminal.innerHTML += `
+total 245
+-rw-r--r-- 1 user user 245KB Jan 20 14:30 birthday.jpg`;
+    }
+    // help
+    else if (cmd === 'help') {
+        terminal.innerHTML += `
+Available commands:
+- exiftool birthday.jpg
+- exiftool -a birthday.jpg (show all tags)
+- exiftool -G birthday.jpg (with group names)
+- exiftool -Copyright birthday.jpg (specific field)
+- strings birthday.jpg | grep -i "sec"
+- file birthday.jpg
+- ls`;
+    }
+    // clear
+    else if (cmd === 'clear') {
+        terminal.innerHTML = `$ file birthday.jpg
+birthday.jpg: JPEG image data
+Available commands:
+- exiftool birthday.jpg (basic metadata)
+- exiftool -a birthday.jpg (show all tags)
+- exiftool -G birthday.jpg (show group names)
+- exiftool -Copyright birthday.jpg (specific tag)
+- strings birthday.jpg | grep -i "sec" (search strings)`;
+        input.value = '';
+        return;
+    }
+    // command not found
+    else {
+        terminal.innerHTML += `
+bash: ${command}: command not found
+Type 'help' for available commands`;
+    }
+    
+    // Clear input and scroll
+    input.value = '';
+    const terminalContainer = terminal.closest('.terminal');
+    terminalContainer.scrollTop = terminalContainer.scrollHeight;
+    input.focus();
+}
+// Forensics - Geolocation Tracker
 
-// Geolocation
 window.executeGeoCommand = function() {
-    const cmd = document.getElementById('geoCommand').value.toLowerCase();
-    const term = document.getElementById('geoTerminal');
-    term.innerHTML += `\n$ ${cmd}`;
+    const input = document.getElementById('geoCommand');
+    const command = input.value.trim();
+    const terminal = document.getElementById('geoTerminal');
+    if (!command) return;
     
-    if (cmd.includes('exiftool')) {
-        term.innerHTML += `\nGPS Latitude: 13.8115 N\nGPS Longitude: 100.5629 E\n(Hint: Location is a University)`;
-    } else if (cmd.includes('md5')) {
-        term.innerHTML += `\nMD5 Hash: CTF{g30l0c4t10n_md5}`;
+    terminal.innerHTML += `\n$ ${command}`;
+    const cmd = command.toLowerCase();
+    
+    // exiftool with GPS and numeric format
+    if (cmd.includes('exiftool') && cmd.includes('gps') && (cmd.includes('-n') || cmd.includes('%.6f'))) {
+        terminal.innerHTML += `
+GPS Latitude                    : 13.8115
+GPS Longitude                   : 100.5629
+GPS Altitude                    : 45 m Above Sea Level
+GPS Latitude Ref                : North
+GPS Longitude Ref               : East
+GPS Altitude Ref                : Above Sea Level
+GPS Time Stamp                  : 07:30:00
+GPS Date Stamp                  : 2024:01:20`;
     }
-};
+    // exiftool with GPS (DMS format)
+    else if (cmd.includes('exiftool') && cmd.includes('gps')) {
+        terminal.innerHTML += `
+GPS Latitude                    : 13 deg 48' 41.40" N
+GPS Longitude                   : 100 deg 33' 46.44" E
+GPS Altitude                    : 45 m Above Sea Level
+GPS Time Stamp                  : 07:30:00
+GPS Date Stamp                  : 2024:01:20
+GPS Position                    : 13 deg 48' 41.40" N, 100 deg 33' 46.44" E
+Use -n flag for decimal format: exiftool -n -GPS* Where_is_it.jpg`;
+    }
+    // basic exiftool
+    else if (cmd.includes('exiftool') && cmd.includes('where')) {
+        terminal.innerHTML += `
+File Name                       : Where_is_it.jpg
+File Size                       : 512 KB
+Camera Model                    : iPhone 12
+Date/Time Original              : 2024:01:20 14:30:00
+GPS Position                    : 13 deg 48' 41.40" N, 100 deg 33' 46.44" E
+Try: exiftool -GPS* Where_is_it.jpg for GPS data only`;
+    }
+    // md5sum with correct answer
+    else if (cmd.includes('md5') && cmd.includes('bangkokuniversity')) {
+        terminal.innerHTML += `
+4a8d8c8e8f3b5d7c9e2a1f6b4c8d3e9a  -`;
+    }
+    // md5sum general
+    else if (cmd.includes('echo') && cmd.includes('md5')) {
+        if (cmd.includes('bangkok') && !cmd.includes('bangkokuniversity')) {
+            terminal.innerHTML += `
+Wrong format. Try: echo -n "bangkokuniversity" | md5sum
+(lowercase, no spaces)`;
+        } else {
+            terminal.innerHTML += `
+Usage: echo -n "text" | md5sum
+Example: echo -n "bangkokuniversity" | md5sum`;
+        }
+    }
+    // file command
+    else if (cmd.includes('file') && cmd.includes('where')) {
+        terminal.innerHTML += `
+Where_is_it.jpg: JPEG image data, EXIF standard 2.2, resolution (DPI), density 72x72`;
+    }
+    // help
+    else if (cmd === 'help') {
+        terminal.innerHTML += `
+Available commands:
+- exiftool Where_is_it.jpg
+- exiftool -GPS* Where_is_it.jpg (GPS only)
+- exiftool -n -GPS* Where_is_it.jpg (decimal)
+- echo -n "text" | md5sum
+- file Where_is_it.jpg
+- ls`;
+    }
+    // clear
+    else if (cmd === 'clear') {
+        terminal.innerHTML = `$ file Where_is_it.jpg
+Where_is_it.jpg: JPEG image data
+Available commands:
+- exiftool -GPS* Where_is_it.jpg (GPS data only)
+- exiftool -n -GPS* Where_is_it.jpg (numeric GPS)
+- exiftool -c "%.6f" -GPS* Where_is_it.jpg (decimal format)
+- echo -n "text" | md5sum (hash text)`;
+        input.value = '';
+        return;
+    }
+    // ls
+    else if (cmd === 'ls' || cmd === 'ls -la') {
+        terminal.innerHTML += `
+total 512
+-rw-r--r-- 1 user user 512KB Jan 20 14:30 Where_is_it.jpg`;
+    }
+    // command not found
+    else {
+        terminal.innerHTML += `
+bash: ${command}: command not found
+Type 'help' for available commands`;
+    }
+    
+    input.value = '';
+    const terminalContainer = terminal.closest('.terminal');
+    terminalContainer.scrollTop = terminalContainer.scrollHeight;
+    input.focus();
+}
 
 // Steganography
 window.executeStegoCommand = function() {
-    const cmd = document.getElementById('stegoCommand').value.toLowerCase();
-    const term = document.getElementById('stegoTerminal');
-    term.innerHTML += `\n$ ${cmd}`;
+    const input = document.getElementById('stegoCommand');
+    const command = input.value.trim();
+    const terminal = document.getElementById('stegoTerminal');
     
-    if (cmd.includes('binwalk')) {
-        if(cmd.includes('-e')) term.innerHTML += `\nExtracted: hidden.zip (at offset 0x1234)`;
-        else term.innerHTML += `\nDECIMAL   DESCRIPTION\n-----------------------\n0         JPEG image\n8187      Zip archive data, encrypted`;
-    } else if (cmd.includes('unzip')) {
-        term.innerHTML += `\nArchive: hidden.zip\nInflating: secret.txt\n(Password verified)`;
-    } else if (cmd.includes('cat') || cmd.includes('base64')) {
-        term.innerHTML += `\nContent: CTF{st3g4n0gr4phy_m4st3r}`;
-    }
-};
+    if (!command) return;
+    
+    // แสดงคำสั่งที่พิมพ์พร้อม prompt
+    terminal.innerHTML += `\n$ ${command}`;
+    
+    const cmd = command.toLowerCase();
+    
+    if (cmd.includes('binwalk') && !cmd.includes('-e')) {
+        terminal.innerHTML += `
+DECIMAL   HEXADECIMAL  DESCRIPTION
+--------------------------------------------------------------------------------
+0         0x0          JPEG image data, JFIF standard 1.01
+8185      0x1FF9       End of JPEG (FF D9)
+8187      0x1FFB       Zip archive data, encrypted
+8534      0x2156       End of Zip archive
 
+Found ZIP file at offset 8187!`;
+    } 
+    else if (cmd.includes('binwalk -e') || cmd.includes('dd')) {
+        terminal.innerHTML += `
+Extracting hidden.zip...
+347 bytes extracted
+File: hidden.zip (password protected)`;
+    } 
+    else if (cmd.includes('unzip')) {
+        if (cmd.includes('whiteflag')) {
+            terminal.innerHTML += `
+Archive: hidden.zip
+inflating: secret.txt
+
+Contents of secret.txt:
+c2VjWHBsb3Jle2IxbndAbGtfc3QzZzBfYjRzZTY0X2gxZGQzbn0=`;
+        } else {
+            terminal.innerHTML += `
+Archive: hidden.zip
+Error: incorrect password
+Hint: Look at the image content`;
+        }
+    } 
+    else if (cmd.includes('base64 -d') || cmd.includes('base64 --decode')) {
+        terminal.innerHTML += `
+CTF{st3g4n0gr4phy_m4st3r}`;
+    } 
+    else {
+        terminal.innerHTML += `
+bash: ${command}: command not found
+Try: binwalk white_flag.jpg`;
+    }
+    
+    // Clear input
+    input.value = '';
+    
+    // Scroll to bottom
+    const terminalContainer = terminal.closest('.terminal');
+    terminalContainer.scrollTop = terminalContainer.scrollHeight;
+    
+    // Focus back to input
+    input.focus();
+}
 // Disk Analysis
+
 window.executeDiskCommand = function() {
-    const cmd = document.getElementById('diskCommand').value.toLowerCase();
-    const term = document.getElementById('diskTerminal');
-    term.innerHTML += `\n$ ${cmd}`;
+    const input = document.getElementById('diskCommand');
+    const command = input.value.trim();
+    const terminal = document.getElementById('diskTerminal');
     
-    if (cmd.includes('fls')) {
-        term.innerHTML += `\nr/r 12847: secret_data.txt (deleted)\nr/r 12848: note.txt`;
-    } else if (cmd.includes('icat') || cmd.includes('foremost')) {
-        term.innerHTML += `\nRecovering inode 12847...\nContent: CTF{d1sk_4n4lys1s_pr0}`;
-    } else if (cmd.includes('strings') && cmd.includes('grep')) {
-        term.innerHTML += `\nOffset 0x1F4B2C: CTF{d1sk_4n4lys1s_pr0}`;
+    if (!command) return;
+    
+    terminal.innerHTML += `\n$ ${command}`;
+    
+    const cmd = command.toLowerCase();
+    
+    // mmls - view partition table
+    if (cmd.includes('mmls')) {
+        terminal.innerHTML += `
+DOS Partition Table
+Offset Sector: 0
+Units are in 512-byte sectors
+
+    Slot      Start        End          Length       Description
+000:  Meta      0000000000   0000000000   0000000001   Primary Table (#0)
+001:  -------   0000000000   0000002047   0000002048   Unallocated
+002:  000:000   0000002048   0001026047   0001024000   Linux (0x83)
+003:  -------   0001026048   0001048575   0000022528   Unallocated
+
+Partition 002 contains ext4 filesystem`;
     }
-};
+    // fls - list files including deleted
+    else if (cmd.includes('fls') && cmd.includes('-d')) {
+        terminal.innerHTML += `
+r/r 11: lost+found
+d/d 12: home
+r/r 15: .bash_history
+r/r 16: Documents
+* r/r 12847: secret_data.txt (deleted)
+r/r 17: Pictures
+r/r 18: Downloads
+* r/r 12848: important.pdf (deleted)
+* r/r 12849: .hidden_file (deleted)
+r/r 19: Desktop
 
+Found 3 deleted files!
+Note inode 12847 for secret_data.txt`;
+    }
+    // fls without -d (only active files)
+    else if (cmd.includes('fls') && !cmd.includes('-d')) {
+        terminal.innerHTML += `
+r/r 11: lost+found
+d/d 12: home
+r/r 15: .bash_history
+r/r 16: Documents
+r/r 17: Pictures
+r/r 18: Downloads
+r/r 19: Desktop
 
-/* --- 4. NETWORK SECURITY --- */
+No deleted files shown. Use -d flag to show deleted files`;
+    }
+    // icat - recover file by inode (wrong inode)
+    else if (cmd.includes('icat') && !cmd.includes('12847')) {
+        terminal.innerHTML += `
+Error: Cannot recover file from inode
+File may be too fragmented or overwritten
+Try inode 12847 for secret_data.txt`;
+    }
+    // icat - recover correct file
+    else if (cmd.includes('icat') && cmd.includes('12847')) {
+        if (cmd.includes('>') || cmd.includes('cat')) {
+            terminal.innerHTML += `
+File recovered successfully!
 
-// Packet Sniffer
+Content of secret_data.txt:
+============================
+Project: SecretOps
+Date: 2024-01-15
+Status: CONFIDENTIAL
+
+Notes:
+- Meeting at 3 PM
+- Password changed to: [CORRUPTED]
+- Flag location: Check slack space at offset 0x1F4B2C
+- [DATA CORRUPTED - USE FILE CARVING]
+
+File appears corrupted. Try file carving or hex search`;
+        } else {
+            terminal.innerHTML += `
+QnJvamVjdDogU2VjcmV0T3BzCkRhdGU6IDIwMjQtMDEtMTUKU3RhdHVz...
+(binary data - redirect to file: icat evidence.dd 12847 > recovered.txt)`;
+        }
+    }
+    // strings search for flag
+    else if (cmd.includes('strings') && cmd.includes('flag')) {
+        terminal.innerHTML += `
+Searching for "flag" in strings...
+
+/home/user/.bash_history
+rm secret_data.txt
+shred -u important.pdf
+Flag location: slack space
+Project SecretOps
+Meeting notes
+[PARTIAL] CTF{d1sk_4n4ly
+[CORRUPTED DATA]
+
+Partial flag found! Need to search deeper`;
+    }
+    // strings search for sec
+    else if (cmd.includes('strings') && cmd.includes('sec')) {
+        terminal.innerHTML += `
+secret_data.txt
+SecretOps
+CTF{d1sk_4n4lys1s_pr0}
+/home/user/.secret
+Security clearance
+
+Full flag found in strings!`;
+    }
+    // xxd hex dump with grep
+    else if (cmd.includes('xxd') && cmd.includes('grep')) {
+        if (cmd.includes('sec') || cmd.includes('flag')) {
+            terminal.innerHTML += `
+001f4b20: 6461 7461 2073 6563 5870 6c6f 7265 7b64  data CTF{d1}
+001f4b30: 3173 6b5f 6630 7233 6e73 3163 735f 6433  1sk_f0r3ns1cs_d3
+001f4b40: 6c33 7433 645f 7233 6330 7633 7279 7d00  l3t3d_r3c0v3ry}.
+
+Flag found at offset 0x1F4B2C!
+CTF{d1sk_4n4lys1s_pr0}`;
+        } else {
+            terminal.innerHTML += `
+00000000: 5375 7065 7220 626c 6f63 6b20 6261 636b  Super block back
+00000010: 7570 2073 746f 7265 6420 6174 2062 6c6f  up stored at blo
+Try: xxd evidence.dd | grep -i "sec"`;
+        }
+    }
+    // foremost file carving
+    else if (cmd.includes('foremost')) {
+        terminal.innerHTML += `
+Foremost version 1.5.7 by Jesse Kornblum, Kris Kendall, and Nick Mikus
+Processing: evidence.dd
+|*************************************************|
+
+Extracting files...
+jpg:= 3
+png:= 2
+txt:= 5
+pdf:= 1
+
+Output written to: output/
+Check output/txt/00000847.txt for recovered data
+
+File 00000847.txt contains:
+CTF{d1sk_4n4lys1s_pr0}`;
+    }
+    // fsstat - filesystem statistics
+    else if (cmd.includes('fsstat')) {
+        terminal.innerHTML += `
+FILE SYSTEM INFORMATION
+--------------------------------------------
+File System Type: Ext4
+Volume Name: evidence
+Volume ID: 1a2b3c4d5e6f7890
+
+METADATA INFORMATION
+--------------------------------------------
+Inode Range: 11 - 12849
+Root Directory: 2
+Free Inodes: 134217728
+
+First Data Block: 0
+Block Size: 4096
+Fragment Size: 4096
+Blocks Per Group: 32768
+Total Block Groups: 15
+
+Deleted inodes available for recovery`;
+    }
+    // dd to extract specific offset
+    else if (cmd.includes('dd') && cmd.includes('skip') && cmd.includes('0x1f4b2c')) {
+        terminal.innerHTML += `
+32+0 records in
+32+0 records out
+32 bytes copied
+
+Extracted data:
+CTF{d1sk_4n4lys1s_pr0}`;
+    }
+    // dd wrong offset
+    else if (cmd.includes('dd') && cmd.includes('skip')) {
+        terminal.innerHTML += `
+Extracted data contains no useful information
+Try offset 0x1F4B2C (decimal: 2050860)`;
+    }
+    // help
+    else if (cmd === 'help') {
+        terminal.innerHTML += `
+Available commands:
+- mmls evidence.dd (partition table)
+- fls -r -d evidence.dd (list deleted files)
+- icat evidence.dd [inode] (recover file)
+- strings evidence.dd | grep -i "pattern"
+- xxd evidence.dd | grep -i "pattern"
+- foremost -i evidence.dd -o output
+- fsstat evidence.dd (filesystem stats)
+- dd if=evidence.dd bs=1 skip=OFFSET count=100`;
+    }
+    // clear
+    else if (cmd === 'clear') {
+        terminal.innerHTML = `$ file evidence.dd
+evidence.dd: Linux rev 1.0 ext4 filesystem data
+
+Available commands:
+- mmls evidence.dd (view partition table)
+- fls -r -d evidence.dd (list deleted files)
+- icat evidence.dd [inode] (recover file by inode)
+- xxd evidence.dd | grep -i "sec" (hex dump search)
+- strings evidence.dd | grep -i "flag" (string search)
+- foremost -i evidence.dd -o output (file carving)`;
+        input.value = '';
+        return;
+    }
+    // command not found
+    else {
+        terminal.innerHTML += `
+bash: ${command}: command not found
+Type 'help' for available commands`;
+    }
+    
+    input.value = '';
+    const terminalContainer = terminal.closest('.terminal');
+    terminalContainer.scrollTop = terminalContainer.scrollHeight;
+    input.focus();
+}
+// Network
 window.executePacketCommand = function() {
-    const cmd = document.getElementById('packetCommand').value.toLowerCase();
-    const term = document.getElementById('packetTerminal');
-    term.innerHTML += `\n$ ${cmd}`;
-    
-    if ((cmd.includes('tshark') || cmd.includes('tcpdump')) && cmd.includes('post')) {
-        term.innerHTML += `\nPOST /api/login HTTP/1.1\nHost: bank.com\n\nuser=admin&pass=CTF{p4ck3t_sn1ff3r_b4s1c}`;
-    } else {
-        term.innerHTML += `\nCapturing... (Too much traffic. Try filtering for POST)`;
+    const input = document.getElementById('packetCommand');
+    const command = input.value.trim();
+    const terminal = document.getElementById('packetTerminal');
+            
+    if (!command) return;
+            
+    terminal.innerHTML += `\n$ ${command}`;
+            
+    const cmd = command.toLowerCase();
+            
+    if (cmd.includes('tcpdump -r') && !cmd.includes('-a')) {
+        terminal.innerHTML += `
+14:23:01.123456 IP 192.168.1.105.52341 > 10.0.0.50.80: Flags [S], seq 1234567890
+14:23:01.124567 IP 10.0.0.50.80 > 192.168.1.105.52341: Flags [S.], seq 9876543210
+14:23:01.234567 IP 192.168.1.105.52341 > 10.0.0.50.80: Flags [P.], POST /api/login
+
+Too many packets. Use tshark -Y "http" to filter`;
     }
-};
+    else if (cmd.includes('tcpdump') && cmd.includes('-a')) {
+        terminal.innerHTML += `
+POST /api/login HTTP/1.1
+Host: insecure-bank.com
+Content-Type: application/x-www-form-urlencoded
 
-// DNS Tunneling
-window.executeDNSCommand = function() {
-    const cmd = document.getElementById('dnsCommand').value.toLowerCase();
-    const term = document.getElementById('dnsTerminal');
-    term.innerHTML += `\n$ ${cmd}`;
-    
-    if (cmd.includes('tshark') || cmd.includes('grep')) {
-        term.innerHTML += `\nQuery: Q1RGe2Ruc190dW5u.exfil.com\nQuery: MzFfM3h0cjRjdH0=.exfil.com\n(Hint: Combine subdomains and Base64 Decode)`;
-    } else if (cmd.includes('base64')) {
-        term.innerHTML += `\nDecoded: CTF{dns_tunn31_3xtr4ct}`;
+username=admin&password=CTF{p4ck3t_sn1ff3r_b4s1c}&remember=true
+
+Found plaintext credentials!`;
     }
-};
+    else if (cmd.includes('tshark') && cmd.includes('http') && !cmd.includes('post')) {
+        terminal.innerHTML += `
+147   14.523456 192.168.1.105 → 10.0.0.50    HTTP GET /index.html
+289   29.123456 192.168.1.105 → 10.0.0.50    HTTP GET /api/data
+432   43.654321 192.168.1.105 → 10.0.0.50    HTTP POST /api/login
 
-// ARP Spoofing
-window.executeARPCommand = function() {
-    const cmd = document.getElementById('arpCommand').value.toLowerCase();
-    const term = document.getElementById('arpTerminal');
-    term.innerHTML += `\n$ ${cmd}`;
-    
-    if (cmd.includes('arpspoof')) {
-        term.innerHTML += `\n[+] Spoofing 192.168.1.100... Target poisoned.\n[+] Traffic Intercepted.\nFound POST data: pass=CTF{4rp_sp00f1ng_4tt4ck}`;
+Use -Y "http.request.method == POST" to filter POST only`;
     }
-};
+    else if (cmd.includes('tshark') && cmd.includes('post')) {
+        if (cmd.includes('-t fields')) {
+            terminal.innerHTML += `
+username=admin&password=CTF{p4ck3t_sn1ff3r_b4s1c}&remember=true
 
-// SSL Strip
-window.executeSSLCommand = function() {
-    const cmd = document.getElementById('sslCommand').value.toLowerCase();
-    const term = document.getElementById('sslTerminal');
-    term.innerHTML += `\n$ ${cmd}`;
-    
-    if (cmd.includes('grep') || (cmd.includes('tshark') && cmd.includes('http'))) {
-        term.innerHTML += `\nHTTP POST /login (Downgraded from HTTPS)\npassword=CTF{ssl_str1p_4n4lys1s}`;
+Flag found in POST data!`;
+        } else {
+            terminal.innerHTML += `
+432   43.654321 192.168.1.105 → 10.0.0.50    HTTP POST /api/login
+        
+Frame 432: HTTP POST /api/login
+    Content-Type: application/x-www-form-urlencoded
+    Form data: username=admin&password=CTF{p4ck3t_sn1ff3r_b4s1c}
+
+    Add -T fields -e http.file_data to extract data`;
+            }
+        }
+        else if (cmd === 'help') {
+            terminal.innerHTML += `
+    Available commands:
+    - tcpdump -r capture.pcap
+    - tcpdump -r capture.pcap -A
+    - tshark -r capture.pcap -Y "http"
+    - tshark -r capture.pcap -Y "http.request.method == POST"`;
+        }
+        else if (cmd === 'clear') {
+            terminal.innerHTML = `$ tcpdump -r capture.pcap
+    Reading from capture.pcap
+
+    Available commands:
+    - tcpdump -r capture.pcap (view packets)
+    - tcpdump -r capture.pcap -A (show ASCII content)
+    - tshark -r capture.pcap -Y "http" (filter HTTP)
+    - tshark -r capture.pcap -Y "http.request.method == POST" (POST only)
+    - tshark -r capture.pcap -Y "http.request.method == POST" -T fields -e http.file_data (extract POST data)`;
+            input.value = '';
+            return;
+        }
+        else {
+            terminal.innerHTML += `
+    bash: ${command}: command not found`;
+        }
+            
+        input.value = '';
+        const terminalContainer = terminal.closest('.terminal');
+        terminalContainer.scrollTop = terminalContainer.scrollHeight;
+        input.focus();
+}
+// DNS Tunneling Command Executor
+function executeDNSCommand() {
+    const input = document.getElementById('dnsCommand');
+    const command = input.value.trim();
+    const terminal = document.getElementById('dnsTerminal');
+            
+    if (!command) return;
+            
+    terminal.innerHTML += `\n$ ${command}`;
+            
+    const cmd = command.toLowerCase();
+            
+    if (cmd.includes('tshark') && cmd.includes('dns') && !cmd.includes('exfil') && !cmd.includes('-t fields')) {
+        terminal.innerHTML += `
+    3   0.002222 192.168.1.105 → 8.8.8.8      DNS Standard query A google.com
+    4   0.003333 8.8.8.8 → 192.168.1.105      DNS Standard query response
+15   1.234567 192.168.1.105 → 8.8.8.8      DNS Standard query A NzM2NTYz.exfil.malicious.com
+28   2.345678 192.168.1.105 → 8.8.8.8      DNS Standard query A NTg3MDcw.exfil.malicious.com
+
+Suspicious DNS queries detected! Use filter with "exfil"`;
     }
-};
+    else if (cmd.includes('tshark') && cmd.includes('exfil') && cmd.includes('-t fields')) {
+        terminal.innerHTML += `
+NzM2NTYzNTg3MDcw.exfil.malicious.com
+QzUyVTM.exfil.malicious.com
+zFkNm5z.exfil.malicious.com
+NzRfTTN.exfil.malicious.com
+oZk1sd3c.exfil.malicious.com
+3cjR0M3.exfil.malicious.com
+BufQ==.exfil.malicious.com
 
-
-/* --- 5. REVERSE ENGINEERING --- */
-
-// ASM Password
-window.testPassword = () => {
-    const v = document.getElementById('asmInput').value;
-    if(v.startsWith('CTF')) document.getElementById('asmOutput').innerText = "✅ Correct! Password: CTF{4sm_p4ssw0rd_ch3ck}";
-    else document.getElementById('asmOutput').innerText = "❌ Incorrect Password";
-};
-window.analyzeASM = () => document.getElementById('asmOutput').innerText = "Analysis:\ncmp al, 115 -> 's'\ncmp al, 101 -> 'e'\nIt compares input string character by character.";
-
-// Crackme
-window.validateSerial = () => document.getElementById('crackmeOutput').innerText = "Checking... Invalid Serial.";
-window.generateSerial = () => document.getElementById('crackmeOutput').innerText = "Algorithm Reversed!\nValid Serial Generated: CTF{cr4ckm3_s3r14l_k3y}";
-
-// Obfuscated
-window.decodeHexStrings = () => document.getElementById('obfuscatedOutput').innerText = "Decoded Strings:\n'sec', 'Xplore', 'flag', 'CTF{obfusc4t3d_c0d3}'";
-window.reconstructFlag = () => document.getElementById('obfuscatedOutput').innerText = "Flag Reconstructed: CTF{obfusc4t3d_c0d3}";
-
-// Malware
-window.decodeC2 = () => document.getElementById('malwareOutput').innerText = "Decoded C2 IP: 192.168.1.50:4444";
-window.extractFlag = () => document.getElementById('malwareOutput').innerText = "Memory Strings Found:\nCTF{m4lw4r3_4n4lys1s_c2}";
-
-
-/* --- 6. MOBILE SECURITY --- */
-
-// APK Strings
-window.executeAPKCommand = function() {
-    const cmd = document.getElementById('apkCommand').value.toLowerCase();
-    const term = document.getElementById('apkTerminal');
-    term.innerHTML += `\n$ ${cmd}`;
-    
-    if (cmd.includes('grep') || cmd.includes('strings')) {
-        term.innerHTML += `\nFound string in Constants.java:\nAPI_KEY = "Q1RGezRwa19zdHIxbmdfNG40bHlzMXN9" (Base64)`;
-    } else if (cmd.includes('base64')) {
-        term.innerHTML += `\nDecoded: CTF{4pk_str1ng_4n4lys1s}`;
+DNS tunneling detected! Combine subdomains and decode Base64`;
     }
-};
+    else if (cmd.includes('tshark') && cmd.includes('exfil') && !cmd.includes('-t fields')) {
+        terminal.innerHTML += `
+15   1.234567 192.168.1.105 → 8.8.8.8      DNS A NzM2NTYzNTg3MDcw.exfil.malicious.com
+28   2.345678 192.168.1.105 → 8.8.8.8      DNS A QzUyVTM.exfil.malicious.com
+31   2.456789 192.168.1.105 → 8.8.8.8      DNS A zFkNm5z.exfil.malicious.com
 
-// Root Detection
-window.executeRootCommand = function() {
-    const cmd = document.getElementById('rootCommand').value.toLowerCase();
-    const term = document.getElementById('rootTerminal');
-    term.innerHTML += `\n$ ${cmd}`;
-    
-    if (cmd.includes('frida') || cmd.includes('objection')) {
-        term.innerHTML += `\n[+] Hooking System.exit()...\n[+] Hooking isRooted()...\n[+] Root Check Bypassed!\n[+] Admin Panel Flag: CTF{r00t_d3t3ct10n_byp4ss}`;
+Add -T fields -e dns.qry.name to extract query names only`;
     }
-};
+    else if (cmd.includes('echo') && cmd.includes('base64 -d')) {
+        if (cmd.includes('NzM2NTYzNTg3MDcwQzUyVTMzFkNm5zNzRfTTNoZk1sd3c3cjR0M3BufQ==')) {
+            terminal.innerHTML += `
+CTF{dns_tunn31_3xtr4ct}`;
+        } else {
+            terminal.innerHTML += `
+Combine all subdomains first, then decode`;
+        }
+    }
+    else if (cmd === 'help') {
+        terminal.innerHTML += `
+Available commands:
+- tshark -r traffic.pcap -Y "dns"
+- tshark -r traffic.pcap -Y "dns.qry.name contains exfil"
+- tshark -r traffic.pcap -Y "dns.qry.name" -T fields -e dns.qry.name
+- echo "base64" | base64 -d`;
+    }
+    else if (cmd === 'clear') {
+        terminal.innerHTML = `$ tshark -r traffic.pcap -Y "dns"
+Analyzing DNS traffic...
 
-// SSL Pinning
-window.executeSSLPinCommand = function() {
-    const cmd = document.getElementById('sslPinCommand').value.toLowerCase();
-    const term = document.getElementById('sslPinTerminal');
-    term.innerHTML += `\n$ ${cmd}`;
-    
-    if (cmd.includes('objection') || cmd.includes('frida')) {
-        term.innerHTML += `\n[+] android sslpinning disable\n[+] SSL Pinning Disabled.\n[+] Burp Suite Intercepted:\n    Authorization: Bearer CTF{ssl_p1nn1ng_byp4ss}`;
+Available commands:
+- tshark -r traffic.pcap -Y "dns" (filter DNS)
+- tshark -r traffic.pcap -Y "dns.qry.name" -T fields -e dns.qry.name (extract query names)
+- tshark -r traffic.pcap -Y "dns.qry.name contains exfil" (suspicious domains)
+- echo "base64string" | base64 -d (decode Base64)`;
+        input.value = '';
+        return;
     }
-};
+    else {
+        terminal.innerHTML += `
+bash: ${command}: command not found`;
+    }
+            
+    input.value = '';
+    const terminalContainer = terminal.closest('.terminal');
+    terminalContainer.scrollTop = terminalContainer.scrollHeight;
+    input.focus();
+}
 
-// Native Library
-window.executeNativeCommand = function() {
-    const cmd = document.getElementById('nativeCommand').value.toLowerCase();
-    const term = document.getElementById('nativeTerminal');
-    term.innerHTML += `\n$ ${cmd}`;
-    
-    if (cmd.includes('strings') || cmd.includes('objdump')) {
-        term.innerHTML += `\n.rodata section:\nSecret Key found\nXOR function at 0x1234\nFlag String: CTF{n4t1v3_l1br4ry_r3v}`;
-    }
-};
 // ============================================
 // 7. NAVIGATION & MODAL EXPORTS
 // ============================================
 
 // เรียกจากหน้า challenge.html
 window.openChallengeList = function(category) {
-    // 1. กรองโจทย์ตามหมวดหมู่
-    const catChallenges = dbChallenges.filter(c => c.category === category);
+    // 1. กรองโจทย์ตามหมวดหมู่ และเรียงตามคะแนน (น้อยไปมาก)
+    const catChallenges = dbChallenges
+        .filter(c => c.category === category)
+        .sort((a, b) => a.score_base - b.score_base); // <--- เพิ่มบรรทัดนี้
     
     const modal = document.getElementById('challengeModal');
     const list = document.getElementById('challengeList');
@@ -2506,7 +3350,6 @@ window.openChallengeList = function(category) {
     const progressFill = document.getElementById('progressFill');
     
     // 2. ตั้งชื่อหัวข้อ
-    // Map ชื่อหมวดให้สวยงาม (Optional)
     const categoryNames = {
         web: '🌐 Web Security',
         crypto: '🔐 Cryptography',
@@ -2517,13 +3360,11 @@ window.openChallengeList = function(category) {
     };
     modalTitle.textContent = categoryNames[category] || category.toUpperCase();
     
-    // 3. คำนวณ Progress (ส่วนที่เพิ่มเข้ามา)
+    // 3. คำนวณ Progress
     const total = catChallenges.length;
-    // นับจำนวนข้อที่ทำเสร็จแล้ว (เช็คจาก userProgressDB)
     const solvedCount = catChallenges.filter(c => userProgressDB[c.challenge_id]).length;
     const percent = total > 0 ? Math.round((solvedCount / total) * 100) : 0;
 
-    // อัปเดต UI Progress Bar
     if (progressText && progressFill) {
         progressText.textContent = `${solvedCount} of ${total} completed (${percent}%)`;
         progressFill.style.width = `${percent}%`;
@@ -2536,16 +3377,15 @@ window.openChallengeList = function(category) {
     }
 
     catChallenges.forEach(c => {
-        // Map DB Code to Short ID for UI logic (e.g. 'WEB001' -> 'sql')
-        // ในที่นี้ผมจะ Reverse Lookup จาก Mapping หรือคุณอาจเพิ่ม column short_id ใน DB ก็ได้
         const shortId = Object.keys(ID_MAPPING).find(key => ID_MAPPING[key] === c.title);
-        
         const isSolved = userProgressDB[c.challenge_id];
-        const statusClass = isSolved ? 'completed' : '';
-        const statusBadge = isSolved ? '<div class="status-badge status-completed">COMPLETE</div>' : '<div class="status-badge status-not-started">START</div>';
-
+        
+        const statusBadge = isSolved 
+            ? '<div class="status-badge status-completed">COMPLETE</div>' 
+            : '<div class="status-badge status-not-started">START</div>';
+            
         const item = document.createElement('div');
-        item.className = `challenge-item ${statusClass}`;
+        item.className = `challenge-item ${isSolved ? 'completed' : ''}`;
         item.innerHTML = `
             <div class="challenge-header">
                 <div class="challenge-name">${c.title}</div>
@@ -2556,15 +3396,17 @@ window.openChallengeList = function(category) {
             </div>
             <div class="challenge-description">${c.description}</div>
             <div class="challenge-meta">
-                <span class="difficulty-badge difficulty-${c.difficulty}">${c.difficulty}</span>
+               <span class="difficulty-badge difficulty-${c.difficulty}">${c.difficulty}</span>
             </div>
         `;
         
-        // Add Click Event
+        // Logic การเปิด Modal
         if (shortId && interactiveChallenges[shortId]) {
             item.onclick = () => openInteractiveChallenge(shortId);
+        } else if (c.interactive_id && interactiveChallenges[c.interactive_id]) {
+            item.onclick = () => openInteractiveChallenge(c.interactive_id);
         } else {
-            item.onclick = () => alert('UI for this challenge is under construction.');
+            item.onclick = () => alert(`Challenge UI not ready for: ${c.title}`);
         }
         
         list.appendChild(item);
@@ -2579,5 +3421,4 @@ window.closeModal = function() {
 
 window.confirmBackToCategory = function() {
     document.getElementById('interactiveModal').classList.remove('active');
-
 };
